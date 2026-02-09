@@ -1,0 +1,17 @@
+# Python virtual environments
+seproject/
+venv/
+env/
+__pycache__/
+*.py[cod]
+
+# Node.js (in case you use it for frontend)
+node_modules/
+dist/
+
+# Environment variables (security)
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
