@@ -18,7 +18,7 @@ body {
 .sidebar {
   width: 220px;
   /* background: #170e30; */
-  background: #b9b9b9;
+  background: #1a1c2c;
   color: rgb(0, 0, 0);
   padding: 20px;
 }
@@ -26,7 +26,7 @@ body {
 .sidebar h2 {
   text-align: center;
   margin-bottom: 20px;
-  color: #000000;
+  color: #615a5a;
 }
 
 .sidebar a {

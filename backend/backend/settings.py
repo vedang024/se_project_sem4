@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'admin',
+    'academicsection',
     'faculty',
     'student',
 ]
@@ -78,13 +78,13 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': BASE_DIR / 'django_db',
+        'NAME': 'django_db',
         'USER': 'admin',
-        'PASSWORD': 1234,
+        'PASSWORD': '1234',
         'HOST': 'localhost',
         'PORT': '3306',
         'OPTIONS': {
-            'init_command': "SET sql_mode = 'STRICT_TRANS_TABLES"
+            'init_command': "SET sql_mode = 'STRICT_TRANS_TABLES'"
         },
     }
 }
@@ -125,3 +125,5 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
