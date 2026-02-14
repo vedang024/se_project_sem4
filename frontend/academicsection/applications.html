@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Applications - Admin Dashboard</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <a href="admin.html"><h3>ADMIN</h3></a>
+    <a href="departments.html">Departments</a>
+    <a href="applications.html" class="active">Applications</a>
+    <a href="timetable.html">Timetable</a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+    <div class="topbar">Applications Management</div>
+
+    <div class="app-layout">
+      
+      <!-- Left Column: Inbox & Sent -->
+      <div class="app-section">
+        <!-- View Toggle Tabs -->
+        <div class="view-toggle">
+          <button class="view-tab active" onclick="switchView('inbox')" id="inboxTab">Inbox <span class="badge-tab">4</span></button>
+          <button class="view-tab" onclick="switchView('sent')" id="sentTab">Sent</button>
+        </div>
+
+        <!-- Inbox Content -->
+        <div id="inboxView">
+          <div class="application-list">
+            <!-- Item 1 -->
+            <div class="application-card unread">
+              <div class="app-card-header">
+                <span class="sender-name">Rahul Sharma</span>
+                <span class="timestamp">10:30 AM</span>
+              </div>
+              <div class="app-card-subject">Leave Request for Medical Appointment</div>
+              <div class="app-card-meta">
+                <span class="tag">Student</span>
+                <span class="tag dept">CS Dept</span>
+                <span class="status pending">Pending</span>
+              </div>
+              <div class="app-card-actions">
+                <button class="btn btn-secondary btn-sm">View Details</button>
+                <button class="btn btn-primary btn-sm">Approve</button>
+              </div>
+            </div>
+            <!-- Add other items as needed -->
+          </div>
+        </div>
+
+        <!-- Sent Content (Hidden by default) -->
+        <div id="sentView" class="hidden">
+          <div class="application-list" id="sentAppsList">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Send Application -->
+      <div class="app-section">
+        <div class="section-header">
+          <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right: 8px; vertical-align: text-bottom;">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+            Send New Application
+          </h3>
+        </div>
+
+        <div class="compose-card">
+          <form id="appForm" onsubmit="sendApplication(event)">
+            
+            <!-- Recipients Selection -->
+            <div class="form-group">
+              <label class="form-label">Select Recipients</label>
+              
+              <div class="recipients-grid">
+                
+                <!-- Students Column -->
+                <div class="recipient-column">
+                  <div class="column-header">
+                    <span>Students</span>
+                    <label class="checkbox-container select-all-mini">
+                      <input type="checkbox" onchange="toggleSelectAll(this, 'studentsList')">
+                      <span class="checkmark"></span>
+                      All
+                    </label>
+                  </div>
+                  
+                  <!-- Department Filter -->
+                  <select class="dept-filter" id="studentDeptFilter" onchange="filterRecipients('students', getSearchValue('students'))">
+                    <option value="all">All Departments</option>
+                    <!-- Populated by JS -->
+                  </select>
+                  
+                  <input type="text" class="search-input" id="studentSearch" placeholder="Search students..." oninput="filterRecipients('students', this.value)">
+                  <div class="recipient-list" id="studentsList">
+                    <!-- Populated by JS -->
+                  </div>
+                </div>
+
+                <!-- Faculty Column -->
+                <div class="recipient-column">
+                  <div class="column-header">
+                    <span>Faculty</span>
+                    <label class="checkbox-container select-all-mini">
+                      <input type="checkbox" onchange="toggleSelectAll(this, 'facultyList')">
+                      <span class="checkmark"></span>
+                      All
+                    </label>
+                  </div>
+
+                  <!-- Department Filter -->
+                  <select class="dept-filter" id="facultyDeptFilter" onchange="filterRecipients('faculty', getSearchValue('faculty'))">
+                    <option value="all">All Departments</option>
+                    <!-- Populated by JS -->
+                  </select>
+                  
+                  <input type="text" class="search-input" id="facultySearch" placeholder="Search faculty..." oninput="filterRecipients('faculty', this.value)">
+                  <div class="recipient-list" id="facultyList">
+                    <!-- Populated by JS -->
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Subject -->
+            <div class="form-group">
+              <label class="form-label">Subject</label>
+              <input type="text" id="appSubject" class="form-input" placeholder="Application subject..." required>
+            </div>
+
+            <!-- Content -->
+            <div class="form-group">
+              <label class="form-label">Content</label>
+              <textarea id="appContent" class="form-textarea" rows="5" placeholder="Write your application details here..."></textarea>
+            </div>
+
+            <!-- Attachments -->
+            <div class="form-group">
+              <label class="form-label">Attachments</label>
+              <div class="file-upload-area" onclick="document.getElementById('fileInput').click()">
+                <input type="file" id="fileInput" multiple hidden onchange="updateFileName(this)">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--muted);">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p id="fileNameDisplay">Click to upload or drag files here</p>
+              </div>
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+              <button type="submit" class="btn btn-primary" style="width: 100%;">Send Application</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Custom JS -->
+<script src="../js/script.js"></script>
+</body>
+</html>
