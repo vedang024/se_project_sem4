@@ -2,6 +2,7 @@
 // CONFIGURATION & STATE
 // ==========================================
 
+const API_BASE_URL = 'http://127.0.0.1:8000';
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 const TIME_SLOTS = ['9-10', '10-11', '11-12', '12-1', '1-2', '2-3', '3-4', '4-5', '5-6'];
 
@@ -12,6 +13,22 @@ const timetableData = {
 let batches = [];
 let currentDay = 'monday';
 let currentCell = null;
+let timetableReadOnly = false;
+let availableBatches = [];
+let timetableBody;
+let batchCount;
+let emptyState;
+let modalOverlay;
+let subjectInput;
+let facultyInput;
+let roomInput;
+let lastUpdatedBadge;
+let addBatchModalOverlay;
+let closeAddBatchModalBtn;
+let cancelAddBatchBtn;
+let addExistingBatchForm;
+let existingBatchSelect;
+let availableBatchNote;
 
 // Department State
 let departments = [
@@ -50,7 +67,7 @@ function generateId() {
 // TIMETABLE LOGIC
 // ==========================================
 
-function initTimetable() {
+async function initTimetable() {
   // Cache DOM elements
   timetableBody = document.getElementById('timetableBody');
   batchCount = document.getElementById('batchCount');
@@ -59,9 +76,297 @@ function initTimetable() {
   subjectInput = document.getElementById('subjectInput');
   facultyInput = document.getElementById('facultyInput');
   roomInput = document.getElementById('roomInput');
+  lastUpdatedBadge = document.getElementById('lastUpdatedBadge');
+  addBatchModalOverlay = document.getElementById('addBatchModalOverlay');
+  closeAddBatchModalBtn = document.getElementById('closeAddBatchModalBtn');
+  cancelAddBatchBtn = document.getElementById('cancelAddBatchBtn');
+  addExistingBatchForm = document.getElementById('addExistingBatchForm');
+  existingBatchSelect = document.getElementById('existingBatchSelect');
+  availableBatchNote = document.getElementById('availableBatchNote');
 
+  setTimetableMode();
   initTimetableEvents();
-  addDemoData();
+  await loadAvailableBatches();
+  await loadTimetableFromServer();
+}
+
+function getCurrentUser() {
+  return JSON.parse(localStorage.getItem('erp_user') || 'null');
+}
+
+function normalizeValue(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function getStudentInfo() {
+  return JSON.parse(localStorage.getItem('erp_student') || 'null');
+}
+
+function getVisibleBatchesForUser() {
+  const user = getCurrentUser();
+  if (!user || user.role !== 'student') {
+    return batches;
+  }
+
+  const student = getStudentInfo() || user;
+  const branchId = normalizeValue(student.branch_id);
+  const branchName = normalizeValue(student.branch || student.branch_name);
+
+  if (!branchId && !branchName) {
+    return [];
+  }
+
+  return batches.filter((batch) => {
+    const batchBranchId = normalizeValue(batch.branch_id);
+    const batchBranchName = normalizeValue(batch.branch_name);
+    const idMatches = branchId && batchBranchId && batchBranchId === branchId;
+    const nameMatches = branchName && batchBranchName && batchBranchName === branchName;
+    return idMatches || nameMatches;
+  });
+}
+
+function setTimetableMode() {
+  const user = getCurrentUser();
+  timetableReadOnly = !user || user.role !== 'admin';
+
+  const addBatchBtn = document.getElementById('addBatchBtn');
+  if (addBatchBtn) {
+    addBatchBtn.style.display = timetableReadOnly ? 'none' : 'inline-flex';
+  }
+
+  const pageTitle = document.querySelector('header h1');
+  const pageSubtitle = document.querySelector('header p');
+  const footerNote = document.querySelector('footer p');
+
+  if (timetableReadOnly) {
+    if (user?.role === 'student') {
+      if (pageTitle) pageTitle.textContent = 'My Timetable';
+      if (pageSubtitle) pageSubtitle.textContent = 'Only your branch timetable is shown';
+      if (footerNote) footerNote.textContent = 'Student view. Timetable updates are managed by admins.';
+    } else {
+      if (pageTitle) pageTitle.textContent = 'Timetable Viewer';
+      if (pageSubtitle) pageSubtitle.textContent = 'Read-only timetable view for students and faculty';
+      if (footerNote) footerNote.textContent = 'Read-only view. Timetable updates are managed by admins.';
+    }
+  }
+}
+
+async function loadTimetableFromServer() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/timetable/`);
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      updateLastUpdatedBadge(null);
+      renderTable();
+      return;
+    }
+
+    const serverData = data.timetable || {};
+    const serverBatches = Array.isArray(serverData.batches) ? serverData.batches.map(normalizeTimetableBatch) : [];
+    const serverTimetable = typeof serverData.timetableData === 'object' && serverData.timetableData ? serverData.timetableData : {};
+
+    batches = serverBatches;
+    DAYS.forEach((day) => {
+      timetableData[day] = typeof serverTimetable[day] === 'object' && serverTimetable[day] ? serverTimetable[day] : {};
+    });
+
+    updateLastUpdatedBadge(data.updated_at || null);
+  } catch (error) {
+    // Keep in-memory defaults if backend is unavailable.
+    updateLastUpdatedBadge(null);
+  }
+
+  renderTable();
+  refreshAvailableBatchSelector();
+}
+
+function normalizeTimetableBatch(batch) {
+  if (!batch) return batch;
+
+  const batchKey = String(batch.branch_batch_id || batch.id || '');
+
+  return {
+    id: batchKey,
+    branch_batch_id: batchKey,
+    branch_id: batch.branch_id || null,
+    branch_name: batch.branch_name || '',
+    department_id: batch.department_id || null,
+    department_name: batch.department_name || '',
+    year: batch.year || batch.semester || null,
+    semester_roman: batch.semester_roman || '',
+    college_year: batch.college_year || null,
+    batch_name: batch.batch_name || batch.name || '',
+    label: batch.label || formatBatchLabel(batch),
+  };
+}
+
+function semesterToRoman(value) {
+  const semester = Number(value);
+  const roman = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+  return roman[semester] || '';
+}
+
+function formatBatchLabel(batch) {
+  const departmentName = batch.department_name || 'Department';
+  const branchName = batch.branch_name || 'Branch';
+  const semesterRoman = batch.semester_roman || semesterToRoman(batch.semester || batch.year);
+  const semester = semesterRoman ? `Semester ${semesterRoman}` : 'Semester';
+  const collegeYear = batch.college_year ? `Year ${batch.college_year}` : 'Year';
+  const batchName = batch.batch_name || batch.name || 'Batch';
+  return `${departmentName} / ${branchName} / ${semester} / ${collegeYear} / ${batchName}`;
+}
+
+async function loadAvailableBatches() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/branch-batches/`);
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      availableBatches = [];
+      return;
+    }
+
+    availableBatches = Array.isArray(data.batches) ? data.batches : [];
+  } catch (error) {
+    availableBatches = [];
+  }
+}
+
+function getSelectedBatchIds() {
+  return new Set(batches.map((batch) => String(batch.branch_batch_id || batch.id || '')));
+}
+
+function getAvailableSelectableBatches() {
+  const selectedIds = getSelectedBatchIds();
+  return availableBatches.filter((batch) => !selectedIds.has(String(batch.id)));
+}
+
+function refreshAvailableBatchSelector() {
+  if (!existingBatchSelect) return;
+
+  const options = getAvailableSelectableBatches();
+  existingBatchSelect.innerHTML = '';
+
+  if (!options.length) {
+    existingBatchSelect.innerHTML = '<option value="">No created batches available</option>';
+    existingBatchSelect.disabled = true;
+    if (availableBatchNote) {
+      availableBatchNote.textContent = 'All created batches are already added to the timetable, or no batches exist yet.';
+    }
+    return;
+  }
+
+  existingBatchSelect.disabled = false;
+  existingBatchSelect.innerHTML = '<option value="">Select batch</option>';
+  options.forEach((batch) => {
+    const option = document.createElement('option');
+    option.value = String(batch.id);
+    option.textContent = batch.label || formatBatchLabel(batch);
+    existingBatchSelect.appendChild(option);
+  });
+
+  if (availableBatchNote) {
+    availableBatchNote.textContent = `${options.length} created batch${options.length === 1 ? '' : 'es'} available to add.`;
+  }
+}
+
+function openAddBatchModal() {
+  if (timetableReadOnly || !addBatchModalOverlay) return;
+  refreshAvailableBatchSelector();
+  addBatchModalOverlay.classList.add('active');
+}
+
+function closeAddBatchModal() {
+  if (!addBatchModalOverlay) return;
+  addExistingBatchForm?.reset();
+  addBatchModalOverlay.classList.remove('active');
+}
+
+async function addSelectedBatchToTimetable(event) {
+  event.preventDefault();
+
+  if (timetableReadOnly) return;
+
+  const selectedId = existingBatchSelect.value;
+  if (!selectedId) {
+    if (availableBatchNote) {
+      availableBatchNote.textContent = 'Please select a created batch.';
+    }
+    return;
+  }
+
+  const selectedBatch = availableBatches.find((batch) => String(batch.id) === String(selectedId));
+  if (!selectedBatch) {
+    if (availableBatchNote) {
+      availableBatchNote.textContent = 'Selected batch is no longer available.';
+    }
+    return;
+  }
+
+  const selectedIds = getSelectedBatchIds();
+  if (selectedIds.has(String(selectedBatch.id))) {
+    if (availableBatchNote) {
+      availableBatchNote.textContent = 'That batch is already on the timetable.';
+    }
+    return;
+  }
+
+  batches.push(normalizeTimetableBatch(selectedBatch));
+
+  DAYS.forEach((day) => {
+    if (!timetableData[day][selectedBatch.id]) {
+      timetableData[day][selectedBatch.id] = {};
+    }
+  });
+
+  renderTable();
+  closeAddBatchModal();
+  saveTimetableToServer();
+}
+
+async function saveTimetableToServer() {
+  if (timetableReadOnly) return;
+
+  const user = getCurrentUser();
+  const payload = {
+    editor_role: user?.role || '',
+    batches,
+    timetableData,
+  };
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/timetable/save/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+      await loadTimetableFromServer();
+    }
+  } catch (error) {
+    // Skip hard failures to keep UI responsive.
+  }
+}
+
+function updateLastUpdatedBadge(updatedAt) {
+  if (!lastUpdatedBadge) return;
+
+  if (!updatedAt) {
+    lastUpdatedBadge.textContent = 'Last updated: Not published yet';
+    return;
+  }
+
+  const dateObj = new Date(updatedAt);
+  if (Number.isNaN(dateObj.getTime())) {
+    lastUpdatedBadge.textContent = 'Last updated: --';
+    return;
+  }
+
+  lastUpdatedBadge.textContent = `Last updated: ${dateObj.toLocaleString()}`;
 }
 
 function initTimetableEvents() {
@@ -71,17 +376,38 @@ function initTimetableEvents() {
   });
 
   // Add batch button
-  document.getElementById('addBatchBtn').addEventListener('click', addBatch);
+  const addBatchBtn = document.getElementById('addBatchBtn');
+  if (addBatchBtn) {
+    addBatchBtn.addEventListener('click', openAddBatchModal);
+  }
 
   // Modal controls
   document.getElementById('closeModalBtn').addEventListener('click', closeModal);
   document.getElementById('saveCellBtn').addEventListener('click', saveCell);
   document.getElementById('clearCellBtn').addEventListener('click', clearCell);
 
+  if (closeAddBatchModalBtn) {
+    closeAddBatchModalBtn.addEventListener('click', closeAddBatchModal);
+  }
+
+  if (cancelAddBatchBtn) {
+    cancelAddBatchBtn.addEventListener('click', closeAddBatchModal);
+  }
+
+  if (addExistingBatchForm) {
+    addExistingBatchForm.addEventListener('submit', addSelectedBatchToTimetable);
+  }
+
   // Close modal on overlay click
   modalOverlay.addEventListener('click', (e) => {
     if (e.target === modalOverlay) closeModal();
   });
+
+  if (addBatchModalOverlay) {
+    addBatchModalOverlay.addEventListener('click', (e) => {
+      if (e.target === addBatchModalOverlay) closeAddBatchModal();
+    });
+  }
 
   // Keyboard navigation
   document.addEventListener('keydown', (e) => {
@@ -89,27 +415,6 @@ function initTimetableEvents() {
       closeModal();
     }
   });
-}
-
-function addDemoData() {
-  const batchId = generateId();
-  batches.push({ id: batchId, name: 'CS-3A' });
-  
-  timetableData.monday[batchId] = {
-    '9-10': { subject: 'CS301', faculty: 'Dr. R', room: '301' },
-    '10-11': { subject: 'CS302', faculty: 'Prof. M', room: 'LAB-A' },
-    '2-3': { subject: 'CS303', faculty: 'Dr. S', room: '201' }
-  };
-
-  const batchId2 = generateId();
-  batches.push({ id: batchId2, name: 'CS-3B' });
-  
-  timetableData.monday[batchId2] = {
-    '11-12': { subject: 'MATH301', faculty: 'Prof. K', room: '102' },
-    '3-4': { subject: 'CS304', faculty: 'Dr. P', room: 'LAB-B' }
-  };
-
-  renderTable();
 }
 
 function switchDay(day) {
@@ -125,31 +430,24 @@ function switchDay(day) {
 }
 
 function addBatch() {
-  const batchId = generateId();
-  batches.push({ id: batchId, name: '' });
-  
-  DAYS.forEach(day => {
-    timetableData[day][batchId] = {};
-  });
-
-  renderTable();
-
-  setTimeout(() => {
-    const input = document.querySelector(`[data-batch-id="${batchId}"] .batch-name input`);
-    if (input) input.focus();
-  }, 50);
+  openAddBatchModal();
 }
 
 function deleteBatch(batchId) {
-  batches = batches.filter(b => b.id !== batchId);
+  if (timetableReadOnly) return;
+
+  const batchKey = String(batchId);
+  batches = batches.filter((batch) => String(batch.branch_batch_id || batch.id || '') !== batchKey);
   DAYS.forEach(day => {
-    delete timetableData[day][batchId];
+    delete timetableData[day][batchKey];
   });
   renderTable();
+  saveTimetableToServer();
 }
 
 function renderTable() {
-  const count = batches.length;
+  const visibleBatches = getVisibleBatchesForUser();
+  const count = visibleBatches.length;
   batchCount.textContent = `${count} batch${count !== 1 ? 'es' : ''}`;
   
   emptyState.style.display = count === 0 ? 'block' : 'none';
@@ -157,31 +455,31 @@ function renderTable() {
 
   if (count === 0) return;
 
-  timetableBody.innerHTML = batches.map(batch => {
-    const batchData = timetableData[currentDay][batch.id] || {};
+  timetableBody.innerHTML = visibleBatches.map(batch => {
+    const batchId = String(batch.branch_batch_id || batch.id || '');
+    const batchData = timetableData[currentDay][batchId] || {};
+    const batchLabel = batch.batch_name || batch.name || 'Batch';
     
     return `
-      <tr data-batch-id="${batch.id}">
+      <tr data-batch-id="${batchId}">
         <td>
           <div class="batch-name">
-            <input 
-              type="text" 
-              value="${batch.name}" 
-              placeholder="Enter batch name"
-              onchange="updateBatchName('${batch.id}', this.value)"
-              aria-label="Batch name"
-            >
-            <button 
-              class="delete-batch" 
-              onclick="deleteBatch('${batch.id}')"
-              aria-label="Delete batch"
-              title="Delete batch"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-              </svg>
-            </button>
+            ${timetableReadOnly
+              ? `<span class="batch-link">${batchLabel}</span>`
+              : `<a class="batch-link" href="batch-detail.html?batch_id=${batchId}">${batchLabel}</a>`}
+            ${timetableReadOnly ? '' : `
+              <button 
+                class="delete-batch" 
+                onclick="deleteBatch('${batchId}')"
+                aria-label="Delete batch"
+                title="Delete batch"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            `}
           </div>
         </td>
         ${TIME_SLOTS.map(slot => {
@@ -191,11 +489,11 @@ function renderTable() {
             <td>
               <div 
                 class="cell ${hasData ? 'filled' : ''}"
-                onclick="openCellEditor('${batch.id}', '${slot}')"
+                onclick="${timetableReadOnly ? '' : `openCellEditor('${batchId}', '${slot}')`}"
                 role="gridcell"
                 tabindex="0"
                 aria-label="${slot} time slot${hasData ? ', ' + cellData.subject : ', empty'}"
-                onkeydown="handleCellKeydown(event, '${batch.id}', '${slot}')"
+                onkeydown="handleCellKeydown(event, '${batchId}', '${slot}')"
               >
                 ${hasData ? `
                   <div class="cell-content">
@@ -221,11 +519,19 @@ function renderTable() {
 }
 
 function updateBatchName(batchId, name) {
-  const batch = batches.find(b => b.id === batchId);
-  if (batch) batch.name = name;
+  if (timetableReadOnly) return;
+
+  const batchKey = String(batchId);
+  const batch = batches.find((item) => String(item.branch_batch_id || item.id || '') === batchKey);
+  if (batch) {
+    batch.name = name;
+    saveTimetableToServer();
+  }
 }
 
 function handleCellKeydown(event, batchId, slot) {
+  if (timetableReadOnly) return;
+
   if (event.key === 'Enter' || event.key === ' ') {
     event.preventDefault();
     openCellEditor(batchId, slot);
@@ -233,8 +539,11 @@ function handleCellKeydown(event, batchId, slot) {
 }
 
 function openCellEditor(batchId, slot) {
-  currentCell = { batchId, slot };
-  const cellData = timetableData[currentDay][batchId]?.[slot] || {};
+  if (timetableReadOnly) return;
+
+  const batchKey = String(batchId);
+  currentCell = { batchId: batchKey, slot };
+  const cellData = timetableData[currentDay][batchKey]?.[slot] || {};
   
   subjectInput.value = cellData.subject || '';
   facultyInput.value = cellData.faculty || '';
@@ -268,14 +577,18 @@ function saveCell() {
 
   renderTable();
   closeModal();
+  saveTimetableToServer();
 }
 
 function clearCell() {
+  if (timetableReadOnly) return;
+
   if (!currentCell) return;
   const { batchId, slot } = currentCell;
   delete timetableData[currentDay][batchId][slot];
   renderTable();
   closeModal();
+  saveTimetableToServer();
 }
 
 // ==========================================

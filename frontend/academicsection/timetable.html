@@ -17,6 +17,7 @@
   <div class="container">
   <div class="sidebar">
     <a href="admin.html"><h3>ADMIN</h3></a>
+    <a href="manage-users.html">Manage Users</a>
     <a href="departments.html">Departments</a>
     <a href="applications.html">Applications</a>
     <a href="timetable.html" class="active">Timetable</a>
@@ -32,9 +33,13 @@
           <p class="text-sm mt-1" style="color: var(--muted);">Manage class schedules for all batches</p>
         </div>
         <div class="flex items-center gap-3">
+          <span class="mono text-xs px-3 py-1.5 rounded-full" id="lastUpdatedBadge" style="background: rgba(59, 130, 246, 0.12); color: #60a5fa;">
+            Last updated: --
+          </span>
           <span class="mono text-xs px-3 py-1.5 rounded-full" style="background: var(--accent-dim); color: var(--accent);">
             9:00 AM - 6:00 PM
           </span>
+          <button class="btn btn-secondary" onclick="logout()">Logout</button>
         </div>
       </div>
     </header>
@@ -59,7 +64,7 @@
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
-          Add Batch
+          Add Existing Batch
         </button>
       </div>
 
@@ -72,8 +77,8 @@
               <th scope="col">9AM-9:55AM</th>
               <th scope="col">10AM-10:55AM</th>
               <th scope="col">11AM-11:55AM</th>
-              <th scope="col">lunch</th>
-              <th scope="col">1PM-1:55PM</th>
+              <th scope="col">12AM-12:55PM</th>
+              <th scope="col">LUNCH</th>
               <th scope="col">2PM-2:55PM</th>
               <th scope="col">3PM-3:55PM</th>
               <th scope="col">4PM-4:55PM</th>
@@ -97,13 +102,13 @@
           </svg>
         </div>
         <p class="font-medium mb-1">No batches added yet</p>
-        <p class="text-sm" style="color: var(--muted);">Click "Add Batch" to start building the timetable</p>
+        <p class="text-sm" style="color: var(--muted);">Click "Add Existing Batch" to select from created branch batches</p>
       </div>
     </div>
 
     <!-- Footer info -->
     <footer class="animate-in delay-3 mt-6 text-center">
-      <p class="text-xs" style="color: var(--muted);">Click any cell to add or edit subject details. All times are fixed 1-hour slots.</p>
+      <p class="text-xs" style="color: var(--muted);">Click any cell to add or edit subject details. Use only already-created batches from your departments.</p>
     </footer>
   </div>
 
@@ -142,7 +147,40 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="addBatchModalOverlay" role="dialog" aria-modal="true" aria-labelledby="addBatchModalTitle">
+    <div class="modal">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="addBatchModalTitle" class="font-semibold">Add Existing Batch</h3>
+        <button class="btn-ghost p-1 rounded" id="closeAddBatchModalBtn" aria-label="Close modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="card" style="padding: 0.8rem; margin-bottom: 1rem;">
+        <p id="availableBatchNote" style="color: var(--muted); font-size: 0.88rem;">Loading available batches...</p>
+      </div>
+
+      <form id="addExistingBatchForm" class="admin-user-form" novalidate>
+        <div>
+          <label for="existingBatchSelect">Select Batch</label>
+          <select id="existingBatchSelect" required>
+            <option value="">Loading...</option>
+          </select>
+        </div>
+
+        <div class="flex gap-2 mt-5">
+          <button type="button" class="btn btn-secondary flex-1" id="cancelAddBatchBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary flex-1" id="addExistingBatchBtn">Add Batch</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Custom JS -->
+  <script src="../js/auth.js"></script>
   <script src="../js/script.js"></script>
 </body>
 </html>

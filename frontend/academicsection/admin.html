@@ -2,19 +2,25 @@
 <html>
 <head>
   <title>Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 <div class="container">
   <div class="sidebar">
     <a href="admin.html"><h3>ADMIN</h3></a>
+    <a href="admin.html" class="active">Dashboard</a>
+    <a href="manage-users.html">Manage Users</a>
     <a href="departments.html">Departments</a>
     <a href="applications.html">Applications</a>
     <a href="timetable.html">Timetable</a>
   </div>
 
   <div class="main">
-    <div class="topbar">Admin Dashboard</div>
+    <div class="topbar">
+      <span>Admin Dashboard</span>
+      <button class="btn btn-secondary" onclick="logout()">Logout</button>
+    </div>
 
     <div class="cards">
       <div class="card"><h3>Departments</h3><h2>8</h2></div>
@@ -30,5 +36,6 @@
     </div>
   </div>
 </div>
+<script src="../js/auth.js"></script>
 </body>
 </html>

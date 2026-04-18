@@ -4,161 +4,77 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Departments - Admin Dashboard</title>
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <!-- Custom CSS (Ensure this path matches your file structure) -->
   <link rel="stylesheet" href="../css/style.css">
 </head>
-<body>
-
+<body class="departments-admin-page">
 <div class="container">
-  <!-- Sidebar -->
   <div class="sidebar">
     <a href="admin.html"><h3>ADMIN</h3></a>
+    <a href="manage-users.html">Manage Users</a>
     <a href="departments.html" class="active">Departments</a>
     <a href="applications.html">Applications</a>
     <a href="timetable.html">Timetable</a>
   </div>
 
-  <!-- Main Content -->
   <div class="main">
     <div class="topbar">
-      Departments
+      <span>Departments</span>
+      <button class="btn btn-secondary" onclick="logout()">Logout</button>
     </div>
 
-    <!-- Department Cards Grid -->
-    <div class="cards">
-      
-      <!-- Department Card 1 -->
-      <div class="card">
-        <div class="dept-header">
-          <div class="dept-icon">CS</div>
-          <h3>Computer Science</h3>
+    <div class="card manage-toolbar">
+      <div class="manage-filter-row">
+        <div>
+          <label>Department Management</label>
+          <p class="manage-note">Add/edit departments and assign HOD from available faculty.</p>
         </div>
-        <div class="dept-stats">
-          <div class="stat-item">
-            <span class="stat-label">HOD</span>
-            <span class="stat-value">Prof. PK Singh</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Faculty</span>
-            <span class="stat-value">12</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Courses</span>
-            <span class="stat-value">8</span>
-          </div>
-        </div>
-        <div class="dept-actions">
-          <button class="btn btn-secondary btn-sm">View Details</button>
-        </div>
+        <button class="btn btn-primary" id="addDeptBtn" type="button">Add Department</button>
       </div>
+      <p id="departmentsMessage" class="admin-user-message" role="status" aria-live="polite"></p>
+    </div>
 
-      <!-- Department Card 2 -->
-      <div class="card">
-        <div class="dept-header">
-          <div class="dept-icon" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">EEE</div>
-          <h3>Electronics & Electrical Engneering</h3>
-        </div>
-        <div class="dept-stats">
-          <div class="stat-item">
-            <span class="stat-label">HOD</span>
-            <span class="stat-value">IDK</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Faculty</span>
-            <span class="stat-value">10</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Courses</span>
-            <span class="stat-value">6</span>
-          </div>
-        </div>
-        <div class="dept-actions">
-          <button class="btn btn-secondary btn-sm">View Details</button>
-        </div>
-      </div>
-
-      <!-- Department Card 3 -->
-      <div class="card">
-        <div class="dept-header">
-          <div class="dept-icon" style="background: rgba(249, 115, 22, 0.15); color: #f97316;">ES</div>
-          <h3>Engineering Sciences</h3>
-        </div>
-        <div class="dept-stats">
-          <div class="stat-item">
-            <span class="stat-label">HOD</span>
-            <span class="stat-value">Anurag Shrivastava</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Faculty</span>
-            <span class="stat-value">8</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Courses</span>
-            <span class="stat-value">5</span>
-          </div>
-        </div>
-        <div class="dept-actions">
-          <button class="btn btn-secondary btn-sm">View Details</button>
-        </div>
-      </div>
-
-      <!-- Department Card 4 -->
-      <div class="card">
-        <div class="dept-header">
-          <div class="dept-icon" style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6;">IT</div>
-          <h3>Information Techcnology</h3>
-        </div>
-        <div class="dept-stats">
-          <div class="stat-item">
-            <span class="stat-label">HOD</span>
-            <span class="stat-value">Prof. Euclid</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Faculty</span>
-            <span class="stat-value">6</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Courses</span>
-            <span class="stat-value">4</span>
-          </div>
-        </div>
-        <div class="dept-actions">
-          <button class="btn btn-secondary btn-sm">View Details</button>
-        </div>
-      </div>
-
-      <!-- Department Card 5 -->
-      <div class="card">
-        <div class="dept-header">
-          <div class="dept-icon" style="background: rgba(236, 72, 153, 0.15); color: #ec4899;">MA</div>
-          <h3>Management</h3>
-        </div>
-        <div class="dept-stats">
-          <div class="stat-item">
-            <span class="stat-label">HOD</span>
-            <span class="stat-value">Dr. R. Feynman</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Faculty</span>
-            <span class="stat-value">5</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Courses</span>
-            <span class="stat-value">3</span>
-          </div>
-        </div>
-        <div class="dept-actions">
-          <button class="btn btn-secondary btn-sm">View Details</button>
-        </div>
-      </div>
-
+    <div class="cards" id="departmentsGrid">
+      <div class="card"><h3>Loading Departments...</h3></div>
     </div>
   </div>
 </div>
 
+<div class="modal-overlay" id="deptModalOverlay" role="dialog" aria-modal="true" aria-labelledby="deptModalTitle">
+  <div class="modal">
+    <div class="flex items-center justify-between mb-4">
+      <h3 id="deptModalTitle" class="font-semibold">Add Department</h3>
+      <button class="btn-ghost p-1 rounded" id="closeDeptModalBtn" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <form id="deptForm" class="admin-user-form" novalidate>
+      <div>
+        <label for="deptNameInput">Department Name</label>
+        <input id="deptNameInput" type="text" placeholder="Enter department name" required>
+      </div>
+      <div>
+        <label for="deptHODSelect">Select HOD</label>
+        <select id="deptHODSelect">
+          <option value="">Select HOD (optional)</option>
+        </select>
+      </div>
+
+      <div class="flex gap-2 mt-5">
+        <button type="button" class="btn btn-secondary flex-1" onclick="closeDeptModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary flex-1">Save Department</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/departments-admin.js"></script>
 </body>
 </html>
