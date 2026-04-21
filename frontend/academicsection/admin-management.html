@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Management - ERP System</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .admin-section {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-section h2 {
+            margin-top: 0;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary-hover);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .admin-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .admin-card {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-info {
+            flex: 1;
+        }
+
+        .admin-info h3 {
+            margin: 0 0 5px 0;
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+
+        .admin-info p {
+            margin: 3px 0;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .admin-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .badge-master {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .badge-active {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge-inactive {
+            background: #6c757d;
+            color: white;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-button.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-button:hover:not(.active) {
+            color: var(--text-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .modal-footer {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .close-modal {
+            color: var(--text-secondary);
+            cursor: pointer;
+            float: right;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .close-modal:hover {
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .admin-actions {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .admin-actions button {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-content">
+            <h1>ERP System</h1>
+            <div class="user-info">
+                <span id="userName">Admin</span>
+                <button onclick="logout()" class="btn btn-secondary btn-small">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-container">
+        <h1>Admin Management</h1>
+        <div id="message"></div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('add')">Add Admin</button>
+            <button class="tab-button" onclick="switchTab('list')">Manage Admins</button>
+        </div>
+
+        <!-- Add Admin Tab -->
+        <div id="add" class="tab-content active">
+            <div class="admin-section">
+                <h2>Create New Admin</h2>
+                <form id="addAdminForm" onsubmit="handleAddAdmin(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="adminEmail">Admin Email</label>
+                            <input type="email" id="adminEmail" placeholder="admin@erp.ac.in" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="adminPassword">Password</label>
+                            <input type="password" id="adminPassword" placeholder="Enter password" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="adminFirstName">First Name (Optional)</label>
+                            <input type="text" id="adminFirstName" placeholder="First name">
+                        </div>
+                        <div class="form-group">
+                            <label for="adminLastName">Last Name (Optional)</label>
+                            <input type="text" id="adminLastName" placeholder="Last name">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminDepartment">Department (Optional)</label>
+                        <select id="adminDepartment">
+                            <option value="">Select Department</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Create Admin</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Manage Admins Tab -->
+        <div id="list" class="tab-content">
+            <div class="admin-section">
+                <h2>Manage Admins</h2>
+                <div id="adminsList" class="admin-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading admins...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div id="resetPasswordModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeResetPasswordModal()">&times;</span>
+            <div class="modal-header">Reset Admin Password</div>
+            <form id="resetPasswordForm" onsubmit="handleResetPassword(event)">
+                <div class="form-group">
+                    <label for="resetAdminEmail">Admin Email</label>
+                    <input type="email" id="resetAdminEmail" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword" placeholder="Enter new password" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeResetPasswordModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Reset Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = "http://127.0.0.1:8000";
+        let currentAdminEmail = null;
+        let departments = [];
+
+        function getAdminSession() {
+            const user = JSON.parse(localStorage.getItem('erp_user') || 'null');
+            if (!user || user.role !== 'admin') {
+                return null;
+            }
+            return {
+                username: String(user.username || '').trim(),
+                password: localStorage.getItem('erp_admin_password') || '',
+            };
+        }
+
+        function buildAdminPayload(extra = {}) {
+            const adminSession = getAdminSession();
+            return {
+                admin_username: adminSession ? adminSession.username : '',
+                admin_password: adminSession ? adminSession.password : '',
+                ...extra,
+            };
+        }
+
+        // Load departments on page load
+        window.addEventListener('load', () => {
+            loadUserInfo();
+            loadDepartments();
+            loadAdminsList();
+        });
+
+        function loadUserInfo() {
+            const user = JSON.parse(localStorage.getItem('erp_user') || '{}');
+            document.getElementById('userName').textContent = user.username || 'Admin';
+        }
+
+        function loadDepartments() {
+            const masterAdminCreds = JSON.parse(localStorage.getItem('erp_user') || '{}');
+            
+            // For now, we'll fetch departments if available
+            // This would need to be set from admin panel previously
+        }
+
+        async function handleAddAdmin(event) {
+            event.preventDefault();
+
+            const adminSession = getAdminSession();
+            if (!adminSession || !adminSession.password) {
+                showMessage('Admin login required. Please sign in again.', 'error');
+                return;
+            }
+
+            const email = document.getElementById('adminEmail').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            const firstName = document.getElementById('adminFirstName').value.trim();
+            const lastName = document.getElementById('adminLastName').value.trim();
+
+            const payload = buildAdminPayload({
+                admin_email: email,
+                new_admin_password: password,
+                first_name: firstName,
+                last_name: lastName,
+            });
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/admins/add/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showMessage(`✓ Admin ${email} created successfully!`, 'success');
+                    document.getElementById('addAdminForm').reset();
+                    loadAdminsList();
+                    setTimeout(() => switchTab('list'), 1500);
+                } else {
+                    showMessage(data.message || 'Failed to create admin', 'error');
+                }
+            } catch (error) {
+                showMessage('Cannot connect to backend', 'error');
+            }
+        }
+
+        async function loadAdminsList() {
+            const adminSession = getAdminSession();
+            if (!adminSession || !adminSession.password) {
+                document.getElementById('adminsList').innerHTML = `
+                    <div class="message warning">
+                        Admin login required. Please sign in again.
+                    </div>
+                `;
+                return;
+            }
+
+            const payload = buildAdminPayload();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/admins/list/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    displayAdminsList(data.admins || []);
+                } else {
+                    document.getElementById('adminsList').innerHTML = `
+                        <div class="message error">${data.message || 'Failed to load admins'}</div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('adminsList').innerHTML = `
+                    <div class="message error">Cannot connect to backend</div>
+                `;
+            }
+        }
+
+        function displayAdminsList(admins) {
+            if (admins.length === 0) {
+                document.getElementById('adminsList').innerHTML = `
+                    <div class="message info">No admins found</div>
+                `;
+                return;
+            }
+
+            let html = '';
+            for (const admin of admins) {
+                const statusBadge = admin.is_active ? 
+                    '<span class="admin-badge badge-active">Active</span>' : 
+                    '<span class="admin-badge badge-inactive">Inactive</span>';
+
+                html += `
+                    <div class="admin-card">
+                        <div class="admin-info">
+                            <h3>${admin.username}</h3>
+                            <p>
+                                ${statusBadge}
+                                ${admin.department ? '<span style="color: var(--text-secondary);">| ' + admin.department + '</span>' : ''}
+                            </p>
+                            <p>Created: ${admin.created_at ? new Date(admin.created_at).toLocaleDateString() : 'N/A'}</p>
+                        </div>
+                        <div class="admin-actions">
+                            <button class="btn btn-primary btn-small" onclick="openResetPasswordModal('${admin.username}')">Reset Password</button>
+                            <button class="btn btn-danger btn-small" onclick="handleDeleteAdmin('${admin.username}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }
+            document.getElementById('adminsList').innerHTML = html;
+        }
+
+        function openResetPasswordModal(email) {
+            currentAdminEmail = email;
+            document.getElementById('resetAdminEmail').value = email;
+            document.getElementById('resetPasswordModal').classList.add('show');
+        }
+
+        function closeResetPasswordModal() {
+            document.getElementById('resetPasswordModal').classList.remove('show');
+            document.getElementById('resetPasswordForm').reset();
+            currentAdminEmail = null;
+        }
+
+        async function handleResetPassword(event) {
+            event.preventDefault();
+
+            const newPassword = document.getElementById('newPassword').value;
+
+            const payload = buildAdminPayload({
+                admin_email: currentAdminEmail,
+                new_password: newPassword,
+            });
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/admins/reset-password/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showMessage(`✓ Password reset successfully for ${currentAdminEmail}`, 'success');
+                    closeResetPasswordModal();
+                    loadAdminsList();
+                } else {
+                    showMessage(data.message || 'Failed to reset password', 'error');
+                }
+            } catch (error) {
+                showMessage('Cannot connect to backend', 'error');
+            }
+        }
+
+        async function handleDeleteAdmin(email) {
+            if (!confirm(`Are you sure you want to delete admin ${email}?`)) {
+                return;
+            }
+
+            const payload = buildAdminPayload({
+                admin_email: email,
+            });
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/admins/delete/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showMessage(`✓ Admin ${email} deleted successfully`, 'success');
+                    loadAdminsList();
+                } else {
+                    showMessage(data.message || 'Failed to delete admin', 'error');
+                }
+            } catch (error) {
+                showMessage('Cannot connect to backend', 'error');
+            }
+        }
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'list') {
+                loadAdminsList();
+            }
+        }
+
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+            messageEl.style.display = 'block';
+
+            if (type !== 'error') {
+                setTimeout(() => {
+                    messageEl.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('erp_user');
+            localStorage.removeItem('erp_admin_password');
+            window.location.href = '../index.html';
+        }
+    </script>
+</body>
+</html>

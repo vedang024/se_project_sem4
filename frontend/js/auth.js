@@ -5,6 +5,7 @@ function getLoginPath() {
 function logout() {
   localStorage.removeItem("erp_user");
   localStorage.removeItem("erp_student");
+  localStorage.removeItem("erp_admin_password");
   window.location.href = getLoginPath();
 }
 
@@ -32,6 +33,21 @@ function logout() {
     return;
   }
 
+  if (currentPath.endsWith("/student-courses.html") && user.role !== "student") {
+    window.location.href = getLoginPath();
+    return;
+  }
+
+  if (currentPath.endsWith("/student-attendance.html") && user.role !== "student") {
+    window.location.href = getLoginPath();
+    return;
+  }
+
+  if (currentPath.endsWith("/student-results.html") && user.role !== "student") {
+    window.location.href = getLoginPath();
+    return;
+  }
+
   if (currentPath.includes("/academicsection/")) {
     const isTimetablePage = currentPath.endsWith("/academicsection/timetable.html");
     if (user.role === "admin") {
@@ -52,3 +68,4 @@ function logout() {
     }
   }
 })();
+

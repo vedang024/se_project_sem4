@@ -88,6 +88,7 @@ class SharedTimetable(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.CharField(max_length=20)
+    roll_no = models.CharField(max_length=20, null=True, blank=True)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
     branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True)
     batch = models.ForeignKey('academicsection.BranchBatch', on_delete=models.SET_NULL, null=True, blank=True)
@@ -107,3 +108,12 @@ class BranchBatch(models.Model):
 
     class Meta:
         unique_together = ('branch', 'year', 'batch_name')
+
+
+class CourseBatch(models.Model):
+    batch = models.ForeignKey(BranchBatch, on_delete=models.CASCADE, related_name='courses')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    faculty = models.ForeignKey('faculty.Faculty', on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        unique_together = ('batch', 'course')

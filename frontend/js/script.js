@@ -109,8 +109,26 @@ function getVisibleBatchesForUser() {
   }
 
   const student = getStudentInfo() || user;
+  const studentBatchId = normalizeValue(student.batch_id);
+  const studentSemester = Number(student.semester || student.current_semester || 0);
   const branchId = normalizeValue(student.branch_id);
   const branchName = normalizeValue(student.branch || student.branch_name);
+
+  if (studentBatchId) {
+    return batches.filter((batch) => normalizeValue(batch.branch_batch_id || batch.id) === studentBatchId);
+  }
+
+  // Fallback for sessions where batch_id is missing.
+  if (studentSemester && (branchId || branchName)) {
+    return batches.filter((batch) => {
+      const batchBranchId = normalizeValue(batch.branch_id);
+      const batchBranchName = normalizeValue(batch.branch_name);
+      const idMatches = branchId && batchBranchId && batchBranchId === branchId;
+      const nameMatches = branchName && batchBranchName && batchBranchName === branchName;
+      const semesterMatches = Number(batch.year || batch.semester || 0) === studentSemester;
+      return (idMatches || nameMatches) && semesterMatches;
+    });
+  }
 
   if (!branchId && !branchName) {
     return [];

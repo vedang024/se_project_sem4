@@ -1,6 +1,4 @@
 const API_BASE_URL = "http://127.0.0.1:8000";
-const MASTER_ADMIN_USERNAME = "masterAdmin@erp.ac.in";
-const MASTER_ADMIN_PASSWORD = "masterAdmin@123";
 
 const params = new URLSearchParams(window.location.search);
 const departmentId = params.get("department_id");
@@ -33,10 +31,22 @@ const editBranchCollegeYearsInput = document.getElementById("editBranchCollegeYe
 
 let departmentData = null;
 
-function masterPayload(extra = {}) {
+function getAdminSession() {
+  const user = JSON.parse(localStorage.getItem("erp_user") || "null");
+  if (!user || user.role !== "admin") {
+    return null;
+  }
   return {
-    admin_username: MASTER_ADMIN_USERNAME,
-    admin_password: MASTER_ADMIN_PASSWORD,
+    username: String(user.username || "").trim(),
+    password: localStorage.getItem("erp_admin_password") || "",
+  };
+}
+
+function masterPayload(extra = {}) {
+  const adminSession = getAdminSession();
+  return {
+    admin_username: adminSession ? adminSession.username : "",
+    admin_password: adminSession ? adminSession.password : "",
     ...extra,
   };
 }
@@ -47,8 +57,8 @@ function setMessage(message, type) {
 }
 
 function isMasterAdminSession() {
-  const user = JSON.parse(localStorage.getItem("erp_user") || "null");
-  return !!(user && user.role === "admin" && user.username === MASTER_ADMIN_USERNAME && user.is_master_admin);
+  const adminSession = getAdminSession();
+  return !!(adminSession && adminSession.password);
 }
 
 function renderSummary() {
@@ -159,7 +169,7 @@ async function saveDepartment(event) {
   event.preventDefault();
 
   if (!isMasterAdminSession()) {
-    setMessage("Only master admin can edit department details.", "error");
+    setMessage("Admin login required to edit department details.", "error");
     return;
   }
 
@@ -194,7 +204,7 @@ async function addBranch(event) {
   event.preventDefault();
 
   if (!isMasterAdminSession()) {
-    setMessage("Only master admin can add branches.", "error");
+    setMessage("Admin login required to add branches.", "error");
     return;
   }
 
@@ -231,7 +241,7 @@ async function addCourse(event) {
   event.preventDefault();
 
   if (!isMasterAdminSession()) {
-    setMessage("Only master admin can add courses.", "error");
+    setMessage("Admin login required to add courses.", "error");
     return;
   }
 
@@ -283,7 +293,7 @@ async function updateBranch(event) {
   event.preventDefault();
 
   if (!isMasterAdminSession()) {
-    setMessage("Only master admin can update branches.", "error");
+    setMessage("Admin login required to update branches.", "error");
     return;
   }
 
@@ -344,3 +354,4 @@ editBranchForm.addEventListener("submit", updateBranch);
     setMessage(error.message || "Failed to load department page.", "error");
   }
 })();
+

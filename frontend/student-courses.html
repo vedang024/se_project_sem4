@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Courses</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+  <div class="sidebar">
+    <h2>STUDENT</h2>
+    <a href="student.html">Dashboard</a>
+    <a href="student-courses.html" class="active">My Courses</a>
+    <a href="student-attendance.html">Attendance</a>
+    <a href="student-results.html">Results</a>
+    <a href="#">Announcements</a>
+    <a href="student-timetable.html">View Timetable</a>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span>My Courses</span>
+      <button class="btn btn-secondary" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="card">
+      <h3>My Courses (Semester Wise)</h3>
+      <p id="myCoursesMeta" class="manage-note">Loading your branch and semester details...</p>
+      <div id="myCoursesSections">
+        <p class="manage-note">Loading courses...</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/auth.js"></script>
+<script src="js/student-courses.js"></script>
+</body>
+</html>

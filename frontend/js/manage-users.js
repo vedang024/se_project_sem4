@@ -1,6 +1,4 @@
 const API_BASE_URL = "http://127.0.0.1:8000";
-const MASTER_ADMIN_USERNAME = "masterAdmin@erp.ac.in";
-const MASTER_ADMIN_PASSWORD = "masterAdmin@123";
 
 const roleFilter = document.getElementById("roleFilter");
 const refreshUsersBtn = document.getElementById("refreshUsersBtn");
@@ -10,23 +8,31 @@ const createUserForm = document.getElementById("createUserForm");
 const createUserButton = document.getElementById("createUserButton");
 const createUserMessage = document.getElementById("createUserMessage");
 const roleField = document.getElementById("newRole");
-const roleMetaFields = document.getElementById("roleMetaFields");
-const facultyMetaFields = document.getElementById("facultyMetaFields");
-const departmentFieldWrap = document.getElementById("departmentFieldWrap");
-const branchFieldWrap = document.getElementById("branchFieldWrap");
-const batchFieldWrap = document.getElementById("batchFieldWrap");
 const departmentSelect = document.getElementById("departmentSelect");
 const branchSelect = document.getElementById("branchSelect");
 const batchSelect = document.getElementById("batchSelect");
-const newUsername = document.getElementById("newUsername");
-const newFacultyName = document.getElementById("newFacultyName");
-const newFacultyEmail = document.getElementById("newFacultyEmail");
+const rollNoFieldWrap = document.getElementById("rollNoFieldWrap");
+const newFullName = document.getElementById("newFullName");
+const newRollNo = document.getElementById("newRollNo");
+const newEmail = document.getElementById("newEmail");
+const createFacultyInfoFields = document.getElementById("createFacultyInfoFields");
+const newFacultyDesignation = document.getElementById("newFacultyDesignation");
+const newFacultyHonor = document.getElementById("newFacultyHonor");
+const newFacultyExperience = document.getElementById("newFacultyExperience");
+const newFacultyPhone = document.getElementById("newFacultyPhone");
+const newFacultyResearchArea = document.getElementById("newFacultyResearchArea");
+const newFacultyAddress = document.getElementById("newFacultyAddress");
+
 const editUserModalOverlay = document.getElementById("editUserModalOverlay");
 const closeEditUserModalBtn = document.getElementById("closeEditUserModalBtn");
 const cancelEditUserBtn = document.getElementById("cancelEditUserBtn");
 const editUserForm = document.getElementById("editUserForm");
 const editUserMessage = document.getElementById("editUserMessage");
 const editUserIdInput = document.getElementById("editUserIdInput");
+const editFullNameInput = document.getElementById("editFullNameInput");
+const editEmailInput = document.getElementById("editEmailInput");
+const editRollNoInput = document.getElementById("editRollNoInput");
+const editRollNoWrap = document.getElementById("editRollNoWrap");
 const editUsernameInput = document.getElementById("editUsernameInput");
 const editRoleSelect = document.getElementById("editRoleSelect");
 const editDepartmentSelect = document.getElementById("editDepartmentSelect");
@@ -34,51 +40,29 @@ const editBranchSelect = document.getElementById("editBranchSelect");
 const editBatchSelect = document.getElementById("editBatchSelect");
 const editBranchFieldWrap = document.getElementById("editBranchFieldWrap");
 const editBatchFieldWrap = document.getElementById("editBatchFieldWrap");
-const editFacultyMetaFields = document.getElementById("editFacultyMetaFields");
-const editFacultyNameInput = document.getElementById("editFacultyNameInput");
-const editFacultyEmailInput = document.getElementById("editFacultyEmailInput");
 const editNewPasswordInput = document.getElementById("editNewPasswordInput");
 const editConfirmPasswordInput = document.getElementById("editConfirmPasswordInput");
+const editFacultyInfoFields = document.getElementById("editFacultyInfoFields");
+const editFacultyDesignationInput = document.getElementById("editFacultyDesignationInput");
+const editFacultyHonorInput = document.getElementById("editFacultyHonorInput");
+const editFacultyExperienceInput = document.getElementById("editFacultyExperienceInput");
+const editFacultyPhoneInput = document.getElementById("editFacultyPhoneInput");
+const editFacultyResearchAreaInput = document.getElementById("editFacultyResearchAreaInput");
+const editFacultyAddressInput = document.getElementById("editFacultyAddressInput");
 
 let departmentsData = [];
 let managedUsers = [];
 let allBatches = [];
 
-function extractBranchCodeFromIdentifier(identifier) {
-  const localPart = String(identifier || "").trim().split("@", 1)[0];
-  const match = localPart.match(/^([a-zA-Z]+)/);
-  return match ? match[1].toUpperCase() : "";
-}
-
-function autoAssignStudentBranchFromIdentifier(identifier, context = "create") {
-  const inferredCode = extractBranchCodeFromIdentifier(identifier);
-  if (!inferredCode) return;
-
-  let matchedDepartment = null;
-  let matchedBranch = null;
-
-  departmentsData.forEach((dept) => {
-    (dept.branches || []).forEach((branch) => {
-      if (String(branch.id || "").toUpperCase() === inferredCode) {
-        matchedDepartment = dept;
-        matchedBranch = branch;
-      }
-    });
-  });
-
-  if (!matchedDepartment || !matchedBranch) return;
-
-  if (context === "create") {
-    departmentSelect.value = String(matchedDepartment.id);
-    populateBranchOptions();
-    branchSelect.value = String(matchedBranch.id);
-    populateBatchOptions();
-  } else {
-    editDepartmentSelect.value = String(matchedDepartment.id);
-    populateEditBranchOptions();
-    editBranchSelect.value = String(matchedBranch.id);
-    populateEditBatchOptions();
+function getAdminSession() {
+  const user = JSON.parse(localStorage.getItem("erp_user") || "null");
+  if (!user || user.role !== "admin") {
+    return null;
   }
+  return {
+    username: String(user.username || "").trim(),
+    password: localStorage.getItem("erp_admin_password") || "",
+  };
 }
 
 function setManageMessage(message, type) {
@@ -87,260 +71,145 @@ function setManageMessage(message, type) {
 }
 
 function setCreateMessage(message, type) {
-  if (!createUserMessage) return;
   createUserMessage.textContent = message;
   createUserMessage.className = `admin-user-message ${type || ""}`.trim();
 }
 
 function setEditMessage(message, type) {
-  if (!editUserMessage) return;
   editUserMessage.textContent = message;
   editUserMessage.className = `admin-user-message ${type || ""}`.trim();
 }
 
 function isMasterAdminSession() {
-  const user = JSON.parse(localStorage.getItem("erp_user") || "null");
-  return !!(user && user.username === MASTER_ADMIN_USERNAME && user.is_master_admin);
+  const adminSession = getAdminSession();
+  return !!(adminSession && adminSession.password);
 }
 
 function masterPayload(extra = {}) {
+  const adminSession = getAdminSession();
   return {
-    admin_username: MASTER_ADMIN_USERNAME,
-    admin_password: MASTER_ADMIN_PASSWORD,
+    admin_username: adminSession ? adminSession.username : "",
+    admin_password: adminSession ? adminSession.password : "",
     ...extra,
   };
 }
 
 function setRoleMetaVisibility() {
-  if (!roleField || !roleMetaFields) return;
-
   const role = roleField.value;
-  const needsDepartment = role === "student" || role === "faculty";
-  const needsBranch = role === "student";
-  const needsBatch = role === "student";
-  const needsFacultyMeta = role === "faculty";
+  const isStudent = role === "student";
+  const isFaculty = role === "faculty";
 
-  roleMetaFields.style.display = needsDepartment ? "grid" : "none";
-  if (facultyMetaFields) {
-    facultyMetaFields.style.display = needsFacultyMeta ? "grid" : "none";
-  }
+  if (rollNoFieldWrap) rollNoFieldWrap.style.display = isStudent ? "block" : "none";
+  if (branchSelect?.parentElement) branchSelect.parentElement.style.display = isStudent ? "block" : "none";
+  if (batchSelect?.parentElement) batchSelect.parentElement.style.display = isStudent ? "block" : "none";
+  if (createFacultyInfoFields) createFacultyInfoFields.style.display = isFaculty ? "grid" : "none";
 
-  if (departmentFieldWrap) {
-    departmentFieldWrap.style.display = needsDepartment ? "block" : "none";
-  }
-
-  if (branchFieldWrap) {
-    branchFieldWrap.style.display = needsBranch ? "block" : "none";
-  }
-
-  if (batchFieldWrap) {
-    batchFieldWrap.style.display = needsBatch ? "block" : "none";
-  }
-
-  if (!needsFacultyMeta) {
-    if (newFacultyName) newFacultyName.value = "";
-    if (newFacultyEmail) newFacultyEmail.value = "";
-  }
-}
-
-function populateDepartmentOptions() {
-  if (!departmentSelect) return;
-
-  departmentSelect.innerHTML = '<option value="">Select department</option>';
-  departmentsData.forEach((dept) => {
-    const option = document.createElement("option");
-    option.value = String(dept.id);
-    option.textContent = dept.name;
-    departmentSelect.appendChild(option);
-  });
-}
-
-function populateEditDepartmentOptions() {
-  if (!editDepartmentSelect) return;
-
-  editDepartmentSelect.innerHTML = '<option value="">Select department</option>';
-  departmentsData.forEach((dept) => {
-    const option = document.createElement("option");
-    option.value = String(dept.id);
-    option.textContent = dept.name;
-    editDepartmentSelect.appendChild(option);
-  });
-}
-
-function populateBranchOptions() {
-  if (!branchSelect) return;
-
-  branchSelect.innerHTML = '<option value="">Select branch</option>';
-  const selectedDept = departmentsData.find((dept) => String(dept.id) === departmentSelect.value);
-  if (!selectedDept) return;
-
-  (selectedDept.branches || []).forEach((branch) => {
-    const option = document.createElement("option");
-    option.value = String(branch.id);
-    option.textContent = branch.name;
-    branchSelect.appendChild(option);
-  });
-
-  populateBatchOptions();
-}
-
-function populateBatchOptions() {
-  if (!batchSelect) return;
-
-  batchSelect.innerHTML = '<option value="">Select batch</option>';
-  const selectedBranchId = String(branchSelect.value || "");
-  if (!selectedBranchId) return;
-
-  allBatches
-    .filter((batch) => String(batch.branch_id || "") === selectedBranchId)
-    .forEach((batch) => {
-      const option = document.createElement("option");
-      option.value = String(batch.id);
-      option.textContent = batch.batch_name || batch.label || `Batch ${batch.id}`;
-      batchSelect.appendChild(option);
-    });
-}
-
-function populateEditBranchOptions() {
-  if (!editBranchSelect) return;
-
-  editBranchSelect.innerHTML = '<option value="">Select branch</option>';
-  const selectedDept = departmentsData.find((dept) => String(dept.id) === editDepartmentSelect.value);
-  if (!selectedDept) return;
-
-  (selectedDept.branches || []).forEach((branch) => {
-    const option = document.createElement("option");
-    option.value = String(branch.id);
-    option.textContent = branch.name;
-    editBranchSelect.appendChild(option);
-  });
-
-  populateEditBatchOptions();
-}
-
-function populateEditBatchOptions() {
-  if (!editBatchSelect) return;
-
-  editBatchSelect.innerHTML = '<option value="">Select batch</option>';
-  const selectedBranchId = String(editBranchSelect.value || "");
-  if (!selectedBranchId) return;
-
-  allBatches
-    .filter((batch) => String(batch.branch_id || "") === selectedBranchId)
-    .forEach((batch) => {
-      const option = document.createElement("option");
-      option.value = String(batch.id);
-      option.textContent = batch.batch_name || batch.label || `Batch ${batch.id}`;
-      editBatchSelect.appendChild(option);
-    });
-}
-
-async function loadBranchBatches() {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/branch-batches/`);
-    const data = await response.json();
-    if (!response.ok || !data.success) {
-      allBatches = [];
-      return;
-    }
-
-    allBatches = Array.isArray(data.batches) ? data.batches : [];
-    populateBatchOptions();
-    populateEditBatchOptions();
-  } catch (error) {
-    allBatches = [];
-  }
-}
-
-async function loadDepartmentsBranches() {
-  if (!departmentSelect) return;
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/departments-branches/`);
-    const data = await response.json();
-    if (!response.ok || !data.success) {
-      setCreateMessage(data.message || "Failed to load departments and branches.", "error");
-      return;
-    }
-
-    departmentsData = Array.isArray(data.departments) ? data.departments : [];
-    populateDepartmentOptions();
-    populateEditDepartmentOptions();
-    populateBranchOptions();
-  } catch (error) {
-    setCreateMessage("Cannot load departments and branches from backend.", "error");
+  if (!isStudent) {
+    newRollNo.value = "";
+    batchSelect.value = "";
   }
 }
 
 function setEditRoleMetaVisibility() {
-  if (!editRoleSelect) return;
-
   const role = editRoleSelect.value;
-  const needsBranch = role === "student";
-  const needsBatch = role === "student";
-  const needsFacultyMeta = role === "faculty";
+  const isStudent = role === "student";
+  const isFaculty = role === "faculty";
 
-  if (editBranchFieldWrap) {
-    editBranchFieldWrap.style.display = needsBranch ? "block" : "none";
-  }
+  if (editRollNoWrap) editRollNoWrap.style.display = isStudent ? "block" : "none";
+  if (editBranchFieldWrap) editBranchFieldWrap.style.display = isStudent ? "block" : "none";
+  if (editBatchFieldWrap) editBatchFieldWrap.style.display = isStudent ? "block" : "none";
+  if (editFacultyInfoFields) editFacultyInfoFields.style.display = isFaculty ? "grid" : "none";
 
-  if (editBatchFieldWrap) {
-    editBatchFieldWrap.style.display = needsBatch ? "block" : "none";
-  }
-
-  if (editFacultyMetaFields) {
-    editFacultyMetaFields.style.display = needsFacultyMeta ? "grid" : "none";
-  }
-
-  if (!needsBranch && editBranchSelect) {
-    editBranchSelect.value = "";
-  }
-
-  if (!needsBatch && editBatchSelect) {
-    editBatchSelect.value = "";
-  }
-
-  if (!needsFacultyMeta) {
-    if (editFacultyNameInput) editFacultyNameInput.value = "";
-    if (editFacultyEmailInput) editFacultyEmailInput.value = "";
+  if (isStudent) {
+    editUsernameInput.value = String(editEmailInput.value || "").trim().toLowerCase();
   }
 }
 
-function validateCreatePayload(payload) {
-  if (!payload.username || !payload.password || !payload.confirm_password || !payload.role) {
-    return "Please fill all fields.";
-  }
+function populateDepartmentOptions() {
+  departmentSelect.innerHTML = '<option value="">Select department</option>';
+  editDepartmentSelect.innerHTML = '<option value="">Select department</option>';
 
+  departmentsData.forEach((dept) => {
+    const createOption = document.createElement("option");
+    createOption.value = String(dept.id);
+    createOption.textContent = dept.name;
+    departmentSelect.appendChild(createOption);
+
+    const editOption = document.createElement("option");
+    editOption.value = String(dept.id);
+    editOption.textContent = dept.name;
+    editDepartmentSelect.appendChild(editOption);
+  });
+}
+
+function populateBranchOptions(targetDepartmentSelect, targetBranchSelect) {
+  targetBranchSelect.innerHTML = '<option value="">Select branch</option>';
+  const selectedDept = departmentsData.find((dept) => String(dept.id) === targetDepartmentSelect.value);
+  if (!selectedDept) return;
+
+  (selectedDept.branches || []).forEach((branch) => {
+    const option = document.createElement("option");
+    option.value = String(branch.id);
+    option.textContent = branch.name;
+    targetBranchSelect.appendChild(option);
+  });
+}
+
+function populateBatchOptions(targetBranchSelect, targetBatchSelect) {
+  targetBatchSelect.innerHTML = '<option value="">Select batch</option>';
+  const selectedBranchId = String(targetBranchSelect.value || "");
+  if (!selectedBranchId) return;
+
+  allBatches
+    .filter((batch) => String(batch.branch_id || "") === selectedBranchId)
+    .forEach((batch) => {
+      const option = document.createElement("option");
+      option.value = String(batch.id);
+      option.textContent = batch.batch_name || batch.label || `Batch ${batch.id}`;
+      targetBatchSelect.appendChild(option);
+    });
+}
+
+async function loadDepartmentsBranches() {
+  const response = await fetch(`${API_BASE_URL}/api/admin/departments-branches/`);
+  const data = await response.json();
+  if (!response.ok || !data.success) {
+    throw new Error(data.message || "Failed to load departments and branches.");
+  }
+  departmentsData = Array.isArray(data.departments) ? data.departments : [];
+  populateDepartmentOptions();
+}
+
+async function loadBranchBatches() {
+  const response = await fetch(`${API_BASE_URL}/api/admin/branch-batches/`);
+  const data = await response.json();
+  if (!response.ok || !data.success) {
+    throw new Error(data.message || "Failed to load batches.");
+  }
+  allBatches = Array.isArray(data.batches) ? data.batches : [];
+}
+
+function validateCreatePayload(payload) {
+  if (!payload.full_name || !payload.email || !payload.password || !payload.confirm_password || !payload.role) {
+    return "Please fill all required fields.";
+  }
+  if (!payload.email.includes("@")) {
+    return "Please enter a valid email.";
+  }
   if (payload.password.length < 8) {
     return "Password must be at least 8 characters.";
   }
-
   if (payload.password !== payload.confirm_password) {
     return "Passwords do not match.";
   }
-
-  if (payload.role === "faculty" && !payload.department_id) {
-    return "Please select department for faculty.";
+  if (!payload.department_id) {
+    return "Please select a department.";
   }
-
-  if (payload.role === "student" && !payload.branch_id) {
-    return "Please select branch for student.";
+  if (payload.role === "student") {
+    if (!payload.roll_no) return "Roll number is required for student.";
+    if (!payload.branch_id) return "Branch is required for student.";
+    if (!payload.batch_id) return "Batch is required for student.";
   }
-
-  if (payload.role === "student" && !payload.batch_id) {
-    return "Please select batch for student.";
-  }
-
-  if (payload.role === "faculty") {
-    if (!payload.faculty_name) {
-      return "Please enter faculty name.";
-    }
-
-    if (!payload.faculty_email || !payload.faculty_email.includes("@")) {
-      return "Please enter a valid faculty email.";
-    }
-  }
-
   return "";
 }
 
@@ -348,22 +217,32 @@ async function createUser(event) {
   event.preventDefault();
 
   if (!isMasterAdminSession()) {
-    setCreateMessage("Only master admin can create users.", "error");
+    setCreateMessage("Admin login required to create users.", "error");
     return;
   }
 
   const formData = new FormData(createUserForm);
-  const role = String(formData.get("newRole") || "").trim();
+  const role = String(formData.get("newRole") || "student").trim();
+  const email = String(formData.get("newEmail") || "").trim().toLowerCase();
   const payload = masterPayload({
-    username: String(formData.get("newUsername") || "").trim(),
+    role,
+    username: email,
+    full_name: String(formData.get("newFullName") || "").trim(),
+    roll_no: role === "student" ? String(formData.get("newRollNo") || "").trim().toUpperCase() : null,
+    email,
     password: String(formData.get("newPassword") || ""),
     confirm_password: String(formData.get("confirmPassword") || ""),
-    role,
     department_id: formData.get("departmentSelect") || null,
     branch_id: role === "student" ? (formData.get("branchSelect") || null) : null,
     batch_id: role === "student" ? (formData.get("batchSelect") || null) : null,
-    faculty_name: role === "faculty" ? String(formData.get("newFacultyName") || "").trim() : null,
-    faculty_email: role === "faculty" ? String(formData.get("newFacultyEmail") || "").trim().toLowerCase() : null,
+    faculty_name: role === "faculty" ? String(formData.get("newFullName") || "").trim() : null,
+    faculty_email: role === "faculty" ? email : null,
+    faculty_designation: role === "faculty" ? String(formData.get("newFacultyDesignation") || "").trim() : "",
+    faculty_honor: role === "faculty" ? String(formData.get("newFacultyHonor") || "").trim() : "",
+    faculty_experience: role === "faculty" ? String(formData.get("newFacultyExperience") || "").trim() : "",
+    faculty_phone_number: role === "faculty" ? String(formData.get("newFacultyPhone") || "").trim() : "",
+    faculty_research_area: role === "faculty" ? String(formData.get("newFacultyResearchArea") || "").trim() : "",
+    faculty_address: role === "faculty" ? String(formData.get("newFacultyAddress") || "").trim() : "",
   });
 
   const validationError = validateCreatePayload(payload);
@@ -378,9 +257,7 @@ async function createUser(event) {
   try {
     const response = await fetch(`${API_BASE_URL}/api/admin/create-user/`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
@@ -392,7 +269,6 @@ async function createUser(event) {
 
     createUserForm.reset();
     setRoleMetaVisibility();
-    populateBranchOptions();
     setCreateMessage(data.message || "User created successfully.", "success");
     await loadUsers();
   } catch (error) {
@@ -402,29 +278,38 @@ async function createUser(event) {
   }
 }
 
+function openUserDetailPage(userId) {
+  window.location.href = `user-details.html?user_id=${encodeURIComponent(userId)}`;
+}
+
 function renderRows(users) {
   if (!users.length) {
     manageUsersBody.innerHTML = `
       <tr>
-        <td colspan="6">No users found for selected filter.</td>
+        <td colspan="8">No users found for selected filter.</td>
       </tr>
     `;
     return;
   }
 
-  manageUsersBody.innerHTML = users.map((user) => `
-    <tr>
-      <td>${user.username}</td>
+  manageUsersBody.innerHTML = users
+    .map(
+      (user) => `
+    <tr onclick="openUserDetailPage(${user.id})" style="cursor:pointer;">
+      <td>${user.full_name || "-"}</td>
+      <td>${user.role === "faculty" ? "N/A" : (user.roll_no || "-")}</td>
+      <td>${user.email || user.username || "-"}</td>
       <td>${user.role}</td>
       <td>${user.department || "-"}</td>
-      <td>${user.branch || "-"}</td>
-      <td>${user.batch || "-"}</td>
+      <td>${user.role === "faculty" ? "N/A" : (user.branch || "-")}</td>
+      <td>${user.role === "faculty" ? "N/A" : (user.batch || "-")}</td>
       <td>
-        <button class="btn btn-secondary btn-sm" onclick="openEditUserModal(${user.id})">Edit</button>
-        <button class="btn btn-secondary btn-sm" data-user-id="${user.id}" onclick="deleteManagedUser(${user.id}, '${user.username}')">Delete</button>
+        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); openUserDetailPage(${user.id})">Open</button>
       </td>
     </tr>
-  `).join("");
+  `,
+    )
+    .join("");
 }
 
 function openEditUserModal(userId) {
@@ -435,28 +320,35 @@ function openEditUserModal(userId) {
   }
 
   editUserIdInput.value = String(user.id);
+  editFullNameInput.value = user.full_name || "";
+  editEmailInput.value = user.email || user.username || "";
+  editRollNoInput.value = user.roll_no || "";
   editUsernameInput.value = user.username || "";
   editRoleSelect.value = user.role || "student";
-  editDepartmentSelect.value = user.department_id ? String(user.department_id) : "";
 
-  populateEditBranchOptions();
+  editDepartmentSelect.value = user.department_id ? String(user.department_id) : "";
+  populateBranchOptions(editDepartmentSelect, editBranchSelect);
   editBranchSelect.value = user.branch_id ? String(user.branch_id) : "";
-  populateEditBatchOptions();
+  populateBatchOptions(editBranchSelect, editBatchSelect);
   editBatchSelect.value = user.batch_id ? String(user.batch_id) : "";
 
-  editFacultyNameInput.value = user.full_name || "";
-  editFacultyEmailInput.value = user.email || "";
+  editFacultyDesignationInput.value = user.faculty_designation || "";
+  editFacultyHonorInput.value = user.faculty_honor || "";
+  editFacultyExperienceInput.value = user.faculty_experience || "";
+  editFacultyPhoneInput.value = user.faculty_phone_number || "";
+  editFacultyResearchAreaInput.value = user.faculty_research_area || "";
+  editFacultyAddressInput.value = user.faculty_address || "";
+
   editNewPasswordInput.value = "";
   editConfirmPasswordInput.value = "";
   setEditRoleMetaVisibility();
   setEditMessage("", "");
 
   editUserModalOverlay.classList.add("active");
-  editUsernameInput.focus();
+  editFullNameInput.focus();
 }
 
 function closeEditUserModal() {
-  if (!editUserModalOverlay || !editUserForm) return;
   editUserModalOverlay.classList.remove("active");
   editUserForm.reset();
   setEditMessage("", "");
@@ -466,51 +358,56 @@ async function saveManagedUser(event) {
   event.preventDefault();
 
   if (!isMasterAdminSession()) {
-    setEditMessage("Only master admin can update users.", "error");
+    setEditMessage("Admin login required to update users.", "error");
     return;
   }
 
   const role = editRoleSelect.value;
+  const email = editEmailInput.value.trim().toLowerCase();
   const payload = masterPayload({
     user_id: Number(editUserIdInput.value),
-    username: editUsernameInput.value.trim(),
     role,
+    username: email,
+    full_name: editFullNameInput.value.trim(),
+    email,
+    roll_no: role === "student" ? editRollNoInput.value.trim().toUpperCase() : null,
     department_id: editDepartmentSelect.value || null,
     branch_id: role === "student" ? (editBranchSelect.value || null) : null,
     batch_id: role === "student" ? (editBatchSelect.value || null) : null,
-    faculty_name: role === "faculty" ? editFacultyNameInput.value.trim() : null,
-    faculty_email: role === "faculty" ? editFacultyEmailInput.value.trim().toLowerCase() : null,
+    faculty_name: role === "faculty" ? editFullNameInput.value.trim() : null,
+    faculty_email: role === "faculty" ? email : null,
+    faculty_designation: role === "faculty" ? editFacultyDesignationInput.value.trim() : "",
+    faculty_honor: role === "faculty" ? editFacultyHonorInput.value.trim() : "",
+    faculty_experience: role === "faculty" ? editFacultyExperienceInput.value.trim() : "",
+    faculty_phone_number: role === "faculty" ? editFacultyPhoneInput.value.trim() : "",
+    faculty_research_area: role === "faculty" ? editFacultyResearchAreaInput.value.trim() : "",
+    faculty_address: role === "faculty" ? editFacultyAddressInput.value.trim() : "",
     new_password: editNewPasswordInput.value,
     confirm_password: editConfirmPasswordInput.value,
   });
 
-  if (!payload.username || !payload.role) {
-    setEditMessage("Username and role are required.", "error");
+  if (!payload.full_name || !payload.email || !payload.role) {
+    setEditMessage("Name, email and role are required.", "error");
     return;
   }
 
-  if (payload.role === "faculty" && !payload.department_id) {
-    setEditMessage("Department is required for faculty.", "error");
+  if (!payload.email.includes("@")) {
+    setEditMessage("Valid email is required.", "error");
     return;
   }
 
-  if (payload.role === "student" && !payload.branch_id) {
-    setEditMessage("Branch is required for student.", "error");
+  if (!payload.department_id) {
+    setEditMessage("Department is required.", "error");
     return;
   }
 
-  if (payload.role === "student" && !payload.batch_id) {
-    setEditMessage("Batch is required for student.", "error");
-    return;
-  }
-
-  if (payload.role === "faculty") {
-    if (!payload.faculty_name) {
-      setEditMessage("Faculty name is required.", "error");
+  if (payload.role === "student") {
+    if (!payload.roll_no) {
+      setEditMessage("Roll number is required for student.", "error");
       return;
     }
-    if (!payload.faculty_email || !payload.faculty_email.includes("@")) {
-      setEditMessage("Valid faculty email is required.", "error");
+    if (!payload.branch_id || !payload.batch_id) {
+      setEditMessage("Branch and batch are required for student.", "error");
       return;
     }
   }
@@ -531,9 +428,7 @@ async function saveManagedUser(event) {
   try {
     const response = await fetch(`${API_BASE_URL}/api/admin/manage-users/update/`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
@@ -553,12 +448,8 @@ async function saveManagedUser(event) {
 
 async function loadUsers() {
   if (!isMasterAdminSession()) {
-    manageUsersBody.innerHTML = `
-      <tr>
-          <td colspan="6">Master admin login required.</td>
-      </tr>
-    `;
-    setManageMessage("Only master admin can manage student and faculty users.", "error");
+    manageUsersBody.innerHTML = '<tr><td colspan="8">Admin login required.</td></tr>';
+    setManageMessage("Admin login required to manage users.", "error");
     refreshUsersBtn.disabled = true;
     roleFilter.disabled = true;
     return;
@@ -570,20 +461,14 @@ async function loadUsers() {
   try {
     const response = await fetch(`${API_BASE_URL}/api/admin/manage-users/`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(masterPayload({ role: roleFilter.value })),
     });
 
     const data = await response.json();
     if (!response.ok || !data.success) {
       setManageMessage(data.message || "Failed to load users.", "error");
-      manageUsersBody.innerHTML = `
-        <tr>
-          <td colspan="6">Unable to load users.</td>
-        </tr>
-      `;
+      manageUsersBody.innerHTML = '<tr><td colspan="8">Unable to load users.</td></tr>';
       return;
     }
 
@@ -597,8 +482,8 @@ async function loadUsers() {
   }
 }
 
-async function deleteManagedUser(userId, username) {
-  const confirmed = window.confirm(`Delete user ${username}?`);
+async function deleteManagedUser(userId, identifier) {
+  const confirmed = window.confirm(`Delete user ${identifier}?`);
   if (!confirmed) return;
 
   setManageMessage("Deleting user...", "");
@@ -606,9 +491,7 @@ async function deleteManagedUser(userId, username) {
   try {
     const response = await fetch(`${API_BASE_URL}/api/admin/manage-users/delete/`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(masterPayload({ user_id: userId })),
     });
 
@@ -619,7 +502,7 @@ async function deleteManagedUser(userId, username) {
     }
 
     setManageMessage(data.message || "User deleted successfully.", "success");
-    loadUsers();
+    await loadUsers();
   } catch (error) {
     setManageMessage("Cannot connect to backend. Make sure Django server is running.", "error");
   }
@@ -627,75 +510,46 @@ async function deleteManagedUser(userId, username) {
 
 window.deleteManagedUser = deleteManagedUser;
 window.openEditUserModal = openEditUserModal;
+window.openUserDetailPage = openUserDetailPage;
 
 roleFilter.addEventListener("change", loadUsers);
 refreshUsersBtn.addEventListener("click", loadUsers);
+createUserForm.addEventListener("submit", createUser);
+roleField.addEventListener("change", setRoleMetaVisibility);
+departmentSelect.addEventListener("change", () => {
+  populateBranchOptions(departmentSelect, branchSelect);
+  populateBatchOptions(branchSelect, batchSelect);
+});
+branchSelect.addEventListener("change", () => populateBatchOptions(branchSelect, batchSelect));
 
-if (createUserForm) {
-  createUserForm.addEventListener("submit", createUser);
-}
+editDepartmentSelect.addEventListener("change", () => {
+  populateBranchOptions(editDepartmentSelect, editBranchSelect);
+  populateBatchOptions(editBranchSelect, editBatchSelect);
+});
+editBranchSelect.addEventListener("change", () => populateBatchOptions(editBranchSelect, editBatchSelect));
+editRoleSelect.addEventListener("change", setEditRoleMetaVisibility);
+editEmailInput.addEventListener("input", () => {
+  if (editRoleSelect.value === "student") {
+    editUsernameInput.value = editEmailInput.value.trim().toLowerCase();
+  }
+});
+editUserForm.addEventListener("submit", saveManagedUser);
+closeEditUserModalBtn.addEventListener("click", closeEditUserModal);
+cancelEditUserBtn.addEventListener("click", closeEditUserModal);
+editUserModalOverlay.addEventListener("click", (event) => {
+  if (event.target === editUserModalOverlay) {
+    closeEditUserModal();
+  }
+});
 
-if (roleField) {
-  roleField.addEventListener("change", setRoleMetaVisibility);
-}
+(async function init() {
+  setRoleMetaVisibility();
+  try {
+    await loadDepartmentsBranches();
+    await loadBranchBatches();
+    await loadUsers();
+  } catch (error) {
+    setManageMessage(error.message || "Failed to initialize page.", "error");
+  }
+})();
 
-if (departmentSelect) {
-  departmentSelect.addEventListener("change", populateBranchOptions);
-}
-
-if (branchSelect) {
-  branchSelect.addEventListener("change", populateBatchOptions);
-}
-
-if (editDepartmentSelect) {
-  editDepartmentSelect.addEventListener("change", populateEditBranchOptions);
-}
-
-if (editBranchSelect) {
-  editBranchSelect.addEventListener("change", populateEditBatchOptions);
-}
-
-if (editRoleSelect) {
-  editRoleSelect.addEventListener("change", setEditRoleMetaVisibility);
-}
-
-if (editUserForm) {
-  editUserForm.addEventListener("submit", saveManagedUser);
-}
-
-if (closeEditUserModalBtn) {
-  closeEditUserModalBtn.addEventListener("click", closeEditUserModal);
-}
-
-if (cancelEditUserBtn) {
-  cancelEditUserBtn.addEventListener("click", closeEditUserModal);
-}
-
-if (editUserModalOverlay) {
-  editUserModalOverlay.addEventListener("click", (event) => {
-    if (event.target === editUserModalOverlay) {
-      closeEditUserModal();
-    }
-  });
-}
-
-setRoleMetaVisibility();
-loadDepartmentsBranches();
-loadBranchBatches();
-loadUsers();
-
-if (newUsername) {
-  newUsername.addEventListener("input", () => {
-    if (roleField?.value === "student") {
-      autoAssignStudentBranchFromIdentifier(newUsername.value, "create");
-    }
-  });
-}
-
-if (editUsernameInput) {
-  editUsernameInput.addEventListener("input", () => {
-    if (editRoleSelect?.value === "student") {
-      autoAssignStudentBranchFromIdentifier(editUsernameInput.value, "edit");
-    }
-  });
-}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Results</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+  <div class="sidebar">
+    <h2>STUDENT</h2>
+    <a href="student.html">Dashboard</a>
+    <a href="student-courses.html">My Courses</a>
+    <a href="student-attendance.html">Attendance</a>
+    <a href="student-results.html" class="active">Results</a>
+    <a href="#">Announcements</a>
+    <a href="student-timetable.html">View Timetable</a>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span>Results</span>
+      <button class="btn btn-secondary" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="cards" style="margin-bottom: 16px;">
+      <div class="card">
+        <h3>CGPA</h3>
+        <p id="cgpaValue">-</p>
+      </div>
+      <div class="card">
+        <h3>Total Graded Credits</h3>
+        <p id="gradedCreditsValue">-</p>
+      </div>
+      <div class="card">
+        <h3>Semesters With Grades</h3>
+        <p id="semesterCountValue">-</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Semester-wise Results</h3>
+      <p id="resultsMeta" class="manage-note">Loading your results...</p>
+      <div id="resultsSections">
+        <p class="manage-note">Loading result data...</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/auth.js"></script>
+<script src="js/student-results.js"></script>
+</body>
+</html>

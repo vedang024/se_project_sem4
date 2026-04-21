@@ -6,6 +6,12 @@ class Faculty(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     department = models.ForeignKey('academicsection.Department', on_delete=models.CASCADE)
+    designation = models.CharField(max_length=100, blank=True)
+    honor = models.CharField(max_length=100, blank=True)
+    experience = models.CharField(max_length=50, blank=True)
+    phone_number = models.CharField(max_length=20, blank=True)
+    research_area = models.CharField(max_length=255, blank=True)
+    address = models.CharField(max_length=255, blank=True)
 
 class FacultyCourse(models.Model):
     faculty = models.ForeignKey('faculty.Faculty', on_delete=models.CASCADE)

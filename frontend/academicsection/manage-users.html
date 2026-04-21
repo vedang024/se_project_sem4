@@ -15,6 +15,9 @@
     <a href="departments.html">Departments</a>
     <a href="applications.html">Applications</a>
     <a href="timetable.html">Timetable</a>
+    <a href="course-enrollment.html">Course Enrollment</a>
+    <a href="view-courses-for-batch.html">View Courses for Batch</a>
+    <a href="view-students-in-course.html">View Students in Course</a>
   </div>
 
   <div class="main">
@@ -25,23 +28,33 @@
 
     <div class="card admin-user-card">
       <h3>Create New User</h3>
-      <p>Create Student, Faculty, or Admin users from this section.</p>
+      <p>Fill student details: name, roll no, email, password, branch, department, and batch.</p>
 
       <form id="createUserForm" class="admin-user-form" novalidate>
         <div class="admin-user-grid">
           <div>
-            <label for="newUsername">Username</label>
-            <input id="newUsername" name="newUsername" type="text" placeholder="Enter username" required>
+            <label for="newFullName">Name</label>
+            <input id="newFullName" name="newFullName" type="text" placeholder="Enter full name" required>
           </div>
 
           <div>
             <label for="newRole">Role</label>
             <select id="newRole" name="newRole" required>
-              <option value="">Select role</option>
               <option value="student">Student</option>
               <option value="faculty">Faculty</option>
-              <option value="admin">Admin</option>
             </select>
+          </div>
+        </div>
+
+        <div class="admin-user-grid">
+          <div id="rollNoFieldWrap">
+            <label for="newRollNo">Roll No</label>
+            <input id="newRollNo" name="newRollNo" type="text" placeholder="Enter roll number" required>
+          </div>
+
+          <div>
+            <label for="newEmail">Email</label>
+            <input id="newEmail" name="newEmail" type="email" placeholder="Enter email" required>
           </div>
         </div>
 
@@ -80,15 +93,30 @@
           </div>
         </div>
 
-        <div class="admin-user-grid role-meta" id="facultyMetaFields">
+        <div class="admin-user-grid" id="createFacultyInfoFields" style="display:none;">
           <div>
-            <label for="newFacultyName">Faculty Name</label>
-            <input id="newFacultyName" name="newFacultyName" type="text" placeholder="e.g. Dr. Ada Lovelace">
+            <label for="newFacultyDesignation">Designation</label>
+            <input id="newFacultyDesignation" name="newFacultyDesignation" type="text" placeholder="e.g. Assistant Professor">
           </div>
-
           <div>
-            <label for="newFacultyEmail">Faculty Email</label>
-            <input id="newFacultyEmail" name="newFacultyEmail" type="email" placeholder="e.g. ada@college.edu">
+            <label for="newFacultyHonor">Honor</label>
+            <input id="newFacultyHonor" name="newFacultyHonor" type="text" placeholder="e.g. PhD, Gold Medalist">
+          </div>
+          <div>
+            <label for="newFacultyExperience">Experience</label>
+            <input id="newFacultyExperience" name="newFacultyExperience" type="text" placeholder="e.g. 7 years">
+          </div>
+          <div>
+            <label for="newFacultyPhone">Phone Number</label>
+            <input id="newFacultyPhone" name="newFacultyPhone" type="text" placeholder="e.g. 9876543210">
+          </div>
+          <div>
+            <label for="newFacultyResearchArea">Research Area</label>
+            <input id="newFacultyResearchArea" name="newFacultyResearchArea" type="text" placeholder="e.g. Machine Learning">
+          </div>
+          <div>
+            <label for="newFacultyAddress">Address</label>
+            <input id="newFacultyAddress" name="newFacultyAddress" type="text" placeholder="Faculty address">
           </div>
         </div>
 
@@ -119,7 +147,9 @@
         <table class="manage-users-table">
           <thead>
             <tr>
-              <th>Username</th>
+              <th>Name</th>
+              <th>Roll No</th>
+              <th>Email</th>
               <th>Role</th>
               <th>Department</th>
               <th>Branch</th>
@@ -129,7 +159,7 @@
           </thead>
           <tbody id="manageUsersBody">
             <tr>
-              <td colspan="6">Loading users...</td>
+              <td colspan="8">Loading users...</td>
             </tr>
           </tbody>
         </table>
@@ -155,8 +185,12 @@
 
       <div class="admin-user-grid">
         <div>
-          <label for="editUsernameInput">Username</label>
-          <input id="editUsernameInput" type="text" required>
+          <label for="editFullNameInput">Name</label>
+          <input id="editFullNameInput" type="text" required>
+        </div>
+        <div>
+          <label for="editEmailInput">Email</label>
+          <input id="editEmailInput" type="email" required>
         </div>
         <div>
           <label for="editRoleSelect">Role</label>
@@ -164,6 +198,17 @@
             <option value="student">Student</option>
             <option value="faculty">Faculty</option>
           </select>
+        </div>
+      </div>
+
+      <div class="admin-user-grid">
+        <div id="editRollNoWrap">
+          <label for="editRollNoInput">Roll No</label>
+          <input id="editRollNoInput" type="text" placeholder="Roll number">
+        </div>
+        <div>
+          <label for="editUsernameInput">Username (Auto)</label>
+          <input id="editUsernameInput" type="text" readonly>
         </div>
       </div>
 
@@ -188,14 +233,30 @@
         </div>
       </div>
 
-      <div class="admin-user-grid" id="editFacultyMetaFields">
+      <div class="admin-user-grid" id="editFacultyInfoFields" style="display:none;">
         <div>
-          <label for="editFacultyNameInput">Faculty Name</label>
-          <input id="editFacultyNameInput" type="text" placeholder="e.g. Dr. Ada Lovelace">
+          <label for="editFacultyDesignationInput">Designation</label>
+          <input id="editFacultyDesignationInput" type="text" placeholder="e.g. Assistant Professor">
         </div>
         <div>
-          <label for="editFacultyEmailInput">Faculty Email</label>
-          <input id="editFacultyEmailInput" type="email" placeholder="e.g. ada@college.edu">
+          <label for="editFacultyHonorInput">Honor</label>
+          <input id="editFacultyHonorInput" type="text" placeholder="e.g. PhD, Gold Medalist">
+        </div>
+        <div>
+          <label for="editFacultyExperienceInput">Experience</label>
+          <input id="editFacultyExperienceInput" type="text" placeholder="e.g. 7 years">
+        </div>
+        <div>
+          <label for="editFacultyPhoneInput">Phone Number</label>
+          <input id="editFacultyPhoneInput" type="text" placeholder="e.g. 9876543210">
+        </div>
+        <div>
+          <label for="editFacultyResearchAreaInput">Research Area</label>
+          <input id="editFacultyResearchAreaInput" type="text" placeholder="e.g. Machine Learning">
+        </div>
+        <div>
+          <label for="editFacultyAddressInput">Address</label>
+          <input id="editFacultyAddressInput" type="text" placeholder="Faculty address">
         </div>
       </div>
 

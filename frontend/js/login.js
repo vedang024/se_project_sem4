@@ -64,8 +64,13 @@ async function handleLogin(event) {
     localStorage.setItem("erp_user", JSON.stringify(data.user));
     if (payload.role === "student") {
       localStorage.setItem("erp_student", JSON.stringify(data.user));
+      localStorage.removeItem("erp_admin_password");
+    } else if (payload.role === "admin") {
+      localStorage.removeItem("erp_student");
+      localStorage.setItem("erp_admin_password", payload.password);
     } else {
       localStorage.removeItem("erp_student");
+      localStorage.removeItem("erp_admin_password");
     }
     setMessage("Login successful. Redirecting...", "success");
 
@@ -83,3 +88,4 @@ async function handleLogin(event) {
 }
 
 loginForm.addEventListener("submit", handleLogin);
+

@@ -1,6 +1,4 @@
 const API_BASE_URL = "http://127.0.0.1:8000";
-const MASTER_ADMIN_USERNAME = "masterAdmin@erp.ac.in";
-const MASTER_ADMIN_PASSWORD = "masterAdmin@123";
 
 const createUserForm = document.getElementById("createUserForm");
 const createUserButton = document.getElementById("createUserButton");
@@ -10,6 +8,18 @@ const roleMetaFields = document.getElementById("roleMetaFields");
 const departmentSelect = document.getElementById("departmentSelect");
 const branchSelect = document.getElementById("branchSelect");
 let departmentsData = [];
+
+function getAdminSession() {
+  const user = JSON.parse(localStorage.getItem("erp_user") || "null");
+  if (!user || user.role !== "admin") {
+    return null;
+  }
+
+  return {
+    username: String(user.username || "").trim(),
+    password: localStorage.getItem("erp_admin_password") || "",
+  };
+}
 
 function setCreateUserMessage(message, type) {
   createUserMessage.textContent = message;
@@ -94,16 +104,16 @@ async function loadDepartmentsBranches() {
 async function createUser(event) {
   event.preventDefault();
 
-  const user = JSON.parse(localStorage.getItem("erp_user") || "null");
-  if (!user || user.username !== MASTER_ADMIN_USERNAME || !user.is_master_admin) {
-    disableUserCreateForm("Only master admin can create new users. Please login with master admin account.");
+  const adminSession = getAdminSession();
+  if (!adminSession || !adminSession.password) {
+    disableUserCreateForm("Admin login required. Please sign in again.");
     return;
   }
 
   const formData = new FormData(createUserForm);
   const payload = {
-    admin_username: MASTER_ADMIN_USERNAME,
-    admin_password: MASTER_ADMIN_PASSWORD,
+    admin_username: adminSession.username,
+    admin_password: adminSession.password,
     username: String(formData.get("newUsername") || "").trim(),
     password: String(formData.get("newPassword") || ""),
     confirm_password: String(formData.get("confirmPassword") || ""),
@@ -146,19 +156,19 @@ async function createUser(event) {
 }
 
 (function initAdminUserSection() {
-  const user = JSON.parse(localStorage.getItem("erp_user") || "null");
+  const adminSession = getAdminSession();
 
-  if (!user || user.role !== "admin") {
+  if (!adminSession) {
     disableUserCreateForm("Admin login required. Please login from the login page first.");
     return;
   }
 
-  if (user.username !== MASTER_ADMIN_USERNAME || !user.is_master_admin) {
-    disableUserCreateForm("This panel is locked for non-master admins.");
+  if (!adminSession.password) {
+    disableUserCreateForm("Please re-login to continue with admin actions.");
     return;
   }
 
-  setCreateUserMessage("Master admin authenticated. You can create users.", "success");
+  setCreateUserMessage("Admin authenticated. You can create users.", "success");
   setRoleMetaVisibility();
   loadDepartmentsBranches();
 })();
@@ -172,3 +182,4 @@ departmentSelect.addEventListener("change", () => {
 });
 
 createUserForm.addEventListener("submit", createUser);
+

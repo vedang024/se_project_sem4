@@ -38,3 +38,4 @@ function setStudentField(fieldId, value, fallback) {
     note.textContent = "Profile data is loaded from your login session.";
   }
 })();
+

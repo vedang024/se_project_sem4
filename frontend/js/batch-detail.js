@@ -1,6 +1,4 @@
 const API_BASE_URL = "http://127.0.0.1:8000";
-const MASTER_ADMIN_USERNAME = "masterAdmin@erp.ac.in";
-const MASTER_ADMIN_PASSWORD = "masterAdmin@123";
 
 const params = new URLSearchParams(window.location.search);
 const batchId = params.get("batch_id");
@@ -18,6 +16,17 @@ const batchCollegeYearInput = document.getElementById("batchCollegeYearInput");
 const batchNameInput = document.getElementById("batchNameInput");
 
 let currentBatch = null;
+
+function getAdminSession() {
+  const user = JSON.parse(localStorage.getItem("erp_user") || "null");
+  if (!user || user.role !== "admin") {
+    return null;
+  }
+  return {
+    username: String(user.username || "").trim(),
+    password: localStorage.getItem("erp_admin_password") || "",
+  };
+}
 
 function getAutoBatchName(branchId, semesterValue) {
   const semester = Number(semesterValue);
@@ -38,8 +47,8 @@ function setMessage(message, type) {
 }
 
 function isMasterAdminSession() {
-  const user = JSON.parse(localStorage.getItem("erp_user") || "null");
-  return !!(user && user.role === "admin" && user.username === MASTER_ADMIN_USERNAME && user.is_master_admin);
+  const adminSession = getAdminSession();
+  return !!(adminSession && adminSession.password);
 }
 
 function handleBackClick(event) {
@@ -88,13 +97,13 @@ async function saveBatch(event) {
   event.preventDefault();
 
   if (!isMasterAdminSession()) {
-    setMessage("Master admin login required to edit batch details.", "error");
+    setMessage("Admin login required to edit batch details.", "error");
     return;
   }
 
   const payload = {
-    admin_username: MASTER_ADMIN_USERNAME,
-    admin_password: MASTER_ADMIN_PASSWORD,
+    admin_username: getAdminSession() ? getAdminSession().username : "",
+    admin_password: getAdminSession() ? getAdminSession().password : "",
     batch_id: Number(batchId),
     semester: Number(batchYearInput.value),
     college_year: Number(batchCollegeYearInput.value),
@@ -129,7 +138,7 @@ async function saveBatch(event) {
 
   try {
     if (!isMasterAdminSession()) {
-      setMessage("Master admin login required to view batch details.", "error");
+      setMessage("Admin login required to view batch details.", "error");
       return;
     }
 
@@ -145,3 +154,4 @@ batchYearInput.addEventListener("change", syncBatchNamePreview);
 if (batchBackBtn) {
   batchBackBtn.addEventListener("click", handleBackClick);
 }
+

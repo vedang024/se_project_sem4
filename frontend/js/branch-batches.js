@@ -1,6 +1,4 @@
 const API_BASE_URL = "http://127.0.0.1:8000";
-const MASTER_ADMIN_USERNAME = "masterAdmin@erp.ac.in";
-const MASTER_ADMIN_PASSWORD = "masterAdmin@123";
 
 const params = new URLSearchParams(window.location.search);
 const departmentId = params.get("department_id");
@@ -27,10 +25,22 @@ let departmentData = null;
 let selectedBranch = null;
 let branchBatches = [];
 
-function masterPayload(extra = {}) {
+function getAdminSession() {
+  const user = JSON.parse(localStorage.getItem("erp_user") || "null");
+  if (!user || user.role !== "admin") {
+    return null;
+  }
   return {
-    admin_username: MASTER_ADMIN_USERNAME,
-    admin_password: MASTER_ADMIN_PASSWORD,
+    username: String(user.username || "").trim(),
+    password: localStorage.getItem("erp_admin_password") || "",
+  };
+}
+
+function masterPayload(extra = {}) {
+  const adminSession = getAdminSession();
+  return {
+    admin_username: adminSession ? adminSession.username : "",
+    admin_password: adminSession ? adminSession.password : "",
     ...extra,
   };
 }
@@ -41,8 +51,8 @@ function setMessage(message, type) {
 }
 
 function isMasterAdminSession() {
-  const user = JSON.parse(localStorage.getItem("erp_user") || "null");
-  return !!(user && user.role === "admin" && user.username === MASTER_ADMIN_USERNAME && user.is_master_admin);
+  const adminSession = getAdminSession();
+  return !!(adminSession && adminSession.password);
 }
 
 function getAutoBatchName(semesterValue) {
@@ -178,7 +188,7 @@ async function addBatch(event) {
   event.preventDefault();
 
   if (!isMasterAdminSession()) {
-    setMessage("Only master admin can add batches.", "error");
+    setMessage("Admin login required to add batches.", "error");
     return;
   }
 
@@ -215,7 +225,7 @@ async function updateBatch(event) {
   event.preventDefault();
 
   if (!isMasterAdminSession()) {
-    setMessage("Only master admin can edit batches.", "error");
+    setMessage("Admin login required to edit batches.", "error");
     return;
   }
 
@@ -249,7 +259,7 @@ async function updateBatch(event) {
 
 async function deleteBranchBatch(batchId, batchName) {
   if (!isMasterAdminSession()) {
-    setMessage("Only master admin can delete batches.", "error");
+    setMessage("Admin login required to delete batches.", "error");
     return;
   }
 
@@ -293,3 +303,4 @@ editBatchSemesterInput.addEventListener("change", syncEditNamePreview);
     setMessage(error.message || "Failed to load branch batches page.", "error");
   }
 })();
+
