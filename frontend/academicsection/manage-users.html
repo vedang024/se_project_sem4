@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Users - Admin</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="container">
+  <div class="sidebar">
+    <a href="admin.html"><h3>ADMIN</h3></a>
+    <a href="admin.html">Dashboard</a>
+    <a href="manage-users.html" class="active">Manage Users</a>
+    <a href="departments.html">Departments</a>
+    <a href="applications.html">Applications</a>
+    <a href="timetable.html">Timetable</a>
+    <a href="course-enrollment.html">Course Enrollment</a>
+    <a href="view-courses-for-batch.html">View Courses for Batch</a>
+    <a href="view-students-in-course.html">View Students in Course</a>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span>Manage Students & Faculty</span>
+      <button class="btn btn-secondary" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="card admin-user-card">
+      <h3>Create New User</h3>
+      <p>Fill student details: name, roll no, email, password, branch, department, and batch.</p>
+
+      <form id="createUserForm" class="admin-user-form" novalidate>
+        <div class="admin-user-grid">
+          <div>
+            <label for="newFullName">Name</label>
+            <input id="newFullName" name="newFullName" type="text" placeholder="Enter full name" required>
+          </div>
+
+          <div>
+            <label for="newRole">Role</label>
+            <select id="newRole" name="newRole" required>
+              <option value="student">Student</option>
+              <option value="faculty">Faculty</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="admin-user-grid">
+          <div id="rollNoFieldWrap">
+            <label for="newRollNo">Roll No</label>
+            <input id="newRollNo" name="newRollNo" type="text" placeholder="Enter roll number" required>
+          </div>
+
+          <div>
+            <label for="newEmail">Email</label>
+            <input id="newEmail" name="newEmail" type="email" placeholder="Enter email" required>
+          </div>
+        </div>
+
+        <div class="admin-user-grid">
+          <div>
+            <label for="newPassword">Password</label>
+            <input id="newPassword" name="newPassword" type="password" placeholder="Minimum 8 characters" required>
+          </div>
+
+          <div>
+            <label for="confirmPassword">Confirm Password</label>
+            <input id="confirmPassword" name="confirmPassword" type="password" placeholder="Re-enter password" required>
+          </div>
+        </div>
+
+        <div class="admin-user-grid role-meta" id="roleMetaFields">
+          <div id="departmentFieldWrap">
+            <label for="departmentSelect">Department</label>
+            <select id="departmentSelect" name="departmentSelect">
+              <option value="">Select department</option>
+            </select>
+          </div>
+
+          <div id="branchFieldWrap">
+            <label for="branchSelect">Branch</label>
+            <select id="branchSelect" name="branchSelect">
+              <option value="">Select branch</option>
+            </select>
+          </div>
+
+          <div id="batchFieldWrap">
+            <label for="batchSelect">Batch</label>
+            <select id="batchSelect" name="batchSelect">
+              <option value="">Select batch</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="admin-user-grid" id="createFacultyInfoFields" style="display:none;">
+          <div>
+            <label for="newFacultyDesignation">Designation</label>
+            <input id="newFacultyDesignation" name="newFacultyDesignation" type="text" placeholder="e.g. Assistant Professor">
+          </div>
+          <div>
+            <label for="newFacultyHonor">Honor</label>
+            <input id="newFacultyHonor" name="newFacultyHonor" type="text" placeholder="e.g. PhD, Gold Medalist">
+          </div>
+          <div>
+            <label for="newFacultyExperience">Experience</label>
+            <input id="newFacultyExperience" name="newFacultyExperience" type="text" placeholder="e.g. 7 years">
+          </div>
+          <div>
+            <label for="newFacultyPhone">Phone Number</label>
+            <input id="newFacultyPhone" name="newFacultyPhone" type="text" placeholder="e.g. 9876543210">
+          </div>
+          <div>
+            <label for="newFacultyResearchArea">Research Area</label>
+            <input id="newFacultyResearchArea" name="newFacultyResearchArea" type="text" placeholder="e.g. Machine Learning">
+          </div>
+          <div>
+            <label for="newFacultyAddress">Address</label>
+            <input id="newFacultyAddress" name="newFacultyAddress" type="text" placeholder="Faculty address">
+          </div>
+        </div>
+
+        <button type="submit" id="createUserButton" class="btn btn-primary">Create User</button>
+        <p id="createUserMessage" class="admin-user-message" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+
+    <br>
+
+    <div class="card manage-toolbar">
+      <div class="manage-filter-row">
+        <div>
+          <label for="roleFilter">Role Filter</label>
+          <select id="roleFilter">
+            <option value="">All</option>
+            <option value="student">Students</option>
+            <option value="faculty">Faculty</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="refreshUsersBtn" type="button">Refresh</button>
+      </div>
+      <p id="manageUsersMessage" class="admin-user-message" role="status" aria-live="polite"></p>
+    </div>
+
+    <div class="card manage-users-table-card">
+      <div class="table-wrapper">
+        <table class="manage-users-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Roll No</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Department</th>
+              <th>Branch</th>
+              <th>Batch</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="manageUsersBody">
+            <tr>
+              <td colspan="8">Loading users...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editUserModalOverlay" role="dialog" aria-modal="true" aria-labelledby="editUserModalTitle">
+  <div class="modal">
+    <div class="flex items-center justify-between mb-4">
+      <h3 id="editUserModalTitle" class="font-semibold">Edit User</h3>
+      <button class="btn-ghost p-1 rounded" id="closeEditUserModalBtn" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <form id="editUserForm" class="admin-user-form" novalidate>
+      <input type="hidden" id="editUserIdInput">
+
+      <div class="admin-user-grid">
+        <div>
+          <label for="editFullNameInput">Name</label>
+          <input id="editFullNameInput" type="text" required>
+        </div>
+        <div>
+          <label for="editEmailInput">Email</label>
+          <input id="editEmailInput" type="email" required>
+        </div>
+        <div>
+          <label for="editRoleSelect">Role</label>
+          <select id="editRoleSelect" required>
+            <option value="student">Student</option>
+            <option value="faculty">Faculty</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="admin-user-grid">
+        <div id="editRollNoWrap">
+          <label for="editRollNoInput">Roll No</label>
+          <input id="editRollNoInput" type="text" placeholder="Roll number">
+        </div>
+        <div>
+          <label for="editUsernameInput">Username (Auto)</label>
+          <input id="editUsernameInput" type="text" readonly>
+        </div>
+      </div>
+
+      <div class="admin-user-grid">
+        <div>
+          <label for="editDepartmentSelect">Department</label>
+          <select id="editDepartmentSelect" required>
+            <option value="">Select department</option>
+          </select>
+        </div>
+        <div id="editBranchFieldWrap">
+          <label for="editBranchSelect">Branch</label>
+          <select id="editBranchSelect">
+            <option value="">Select branch</option>
+          </select>
+        </div>
+        <div id="editBatchFieldWrap">
+          <label for="editBatchSelect">Batch</label>
+          <select id="editBatchSelect">
+            <option value="">Select batch</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="admin-user-grid" id="editFacultyInfoFields" style="display:none;">
+        <div>
+          <label for="editFacultyDesignationInput">Designation</label>
+          <input id="editFacultyDesignationInput" type="text" placeholder="e.g. Assistant Professor">
+        </div>
+        <div>
+          <label for="editFacultyHonorInput">Honor</label>
+          <input id="editFacultyHonorInput" type="text" placeholder="e.g. PhD, Gold Medalist">
+        </div>
+        <div>
+          <label for="editFacultyExperienceInput">Experience</label>
+          <input id="editFacultyExperienceInput" type="text" placeholder="e.g. 7 years">
+        </div>
+        <div>
+          <label for="editFacultyPhoneInput">Phone Number</label>
+          <input id="editFacultyPhoneInput" type="text" placeholder="e.g. 9876543210">
+        </div>
+        <div>
+          <label for="editFacultyResearchAreaInput">Research Area</label>
+          <input id="editFacultyResearchAreaInput" type="text" placeholder="e.g. Machine Learning">
+        </div>
+        <div>
+          <label for="editFacultyAddressInput">Address</label>
+          <input id="editFacultyAddressInput" type="text" placeholder="Faculty address">
+        </div>
+      </div>
+
+      <div class="admin-user-grid">
+        <div>
+          <label for="editNewPasswordInput">New Password</label>
+          <input id="editNewPasswordInput" type="password" placeholder="Leave blank to keep current password">
+        </div>
+        <div>
+          <label for="editConfirmPasswordInput">Confirm Password</label>
+          <input id="editConfirmPasswordInput" type="password" placeholder="Re-enter new password">
+        </div>
+      </div>
+
+      <p id="editUserMessage" class="admin-user-message" role="status" aria-live="polite"></p>
+      <div class="flex gap-2 mt-5">
+        <button type="button" class="btn btn-secondary flex-1" id="cancelEditUserBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary flex-1">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/manage-users.js"></script>
+</body>
+</html>

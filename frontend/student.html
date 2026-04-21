@@ -8,15 +8,19 @@
 <div class="container">
   <div class="sidebar">
     <h2>STUDENT</h2>
-    <a href="#">Dashboard</a>
-    <a href="#">My Courses</a>
-    <a href="#">Attendance</a>
-    <a href="#">Results</a>
+    <a href="student.html">Dashboard</a>
+    <a href="student-courses.html">My Courses</a>
+    <a href="student-attendance.html">Attendance</a>
+    <a href="student-results.html">Results</a>
     <a href="#">Announcements</a>
+    <a href="student-timetable.html">View Timetable</a>
   </div>
 
   <div class="main">
-    <div class="topbar">Student Dashboard</div>
+    <div class="topbar">
+      <span>Student Dashboard</span>
+      <button class="btn btn-secondary" onclick="logout()">Logout</button>
+    </div>
 
     <div class="cards">
       <div class="card"><h3>Attendance</h3><p>85%</p></div>
@@ -27,10 +31,31 @@
     <br>
 
     <div class="card">
+      <h3>Student Info</h3>
+      <div class="table-wrapper">
+        <table class="manage-users-table">
+          <tbody>
+            <tr><td><strong>Name</strong></td><td id="studentName">-</td></tr>
+            <tr><td><strong>Username</strong></td><td id="studentUsername">-</td></tr>
+            <tr><td><strong>Department</strong></td><td id="studentDepartment">-</td></tr>
+            <tr><td><strong>Branch</strong></td><td id="studentBranch">-</td></tr>
+            <tr><td><strong>Branch ID</strong></td><td id="studentBranchId">-</td></tr>
+            <tr><td><strong>Batch</strong></td><td id="studentBatch">Not Assigned</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="manage-note" id="studentInfoNote" style="margin-top: 0.6rem;">Profile data is loaded from your login session.</p>
+    </div>
+
+    <br>
+
+    <div class="card">
       <h3>Latest Announcement</h3>
       <p>Campus Fest This Friday!</p>
     </div>
   </div>
 </div>
+<script src="js/auth.js"></script>
+<script src="js/student-dashboard.js"></script>
 </body>
 </html>

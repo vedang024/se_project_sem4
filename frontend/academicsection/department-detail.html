@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Department Detail - Admin</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="container">
+  <div class="sidebar">
+    <a href="admin.html"><h3>ADMIN</h3></a>
+    <a href="manage-users.html">Manage Users</a>
+    <a href="departments.html" class="active">Departments</a>
+    <a href="applications.html">Applications</a>
+    <a href="timetable.html">Timetable</a>
+    <a href="course-enrollment.html">Course Enrollment</a>
+    <a href="view-courses-for-batch.html">View Courses for Batch</a>
+    <a href="view-students-in-course.html">View Students in Course</a>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span id="departmentTitle">Department Detail</span>
+      <div class="dept-top-actions">
+        <a class="btn btn-secondary" href="departments.html">Back</a>
+        <button class="btn btn-secondary" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="cards dept-detail-summary" id="deptSummaryCards">
+      <div class="card"><h3>Loading...</h3></div>
+    </div>
+
+    <div class="cards dept-detail-layout">
+      <div class="card">
+        <h3>Edit Department</h3>
+        <form id="editDepartmentForm" class="admin-user-form" novalidate>
+          <div>
+            <label for="deptNameInput">Department Name</label>
+            <input id="deptNameInput" type="text" required>
+          </div>
+          <div>
+            <label for="deptHODSelect">HOD</label>
+            <select id="deptHODSelect">
+              <option value="">Select HOD (optional)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Department</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Add Branch</h3>
+        <form id="addBranchForm" class="admin-user-form" novalidate>
+          <div>
+            <label for="branchCodeInput">Branch Code</label>
+            <input id="branchCodeInput" type="text" placeholder="e.g. CSE" required>
+          </div>
+          <div>
+            <label for="branchNameInput">Branch Name</label>
+            <input id="branchNameInput" type="text" placeholder="e.g. Computer Science & Engineering" required>
+          </div>
+          <div>
+            <label for="branchCollegeYearsInput">No. of College Years</label>
+            <select id="branchCollegeYearsInput" required>
+              <option value="">Select years</option>
+              <option value="1">1 Year</option>
+              <option value="2">2 Years</option>
+              <option value="3">3 Years</option>
+              <option value="4">4 Years</option>
+              <option value="5">5 Years</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Add Branch</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Add Course</h3>
+        <form id="addCourseForm" class="admin-user-form" novalidate>
+          <div>
+            <label for="courseCodeInput">Course Code</label>
+            <input id="courseCodeInput" type="text" placeholder="e.g. CS101" required>
+          </div>
+          <div>
+            <label for="courseNameInput">Course Name</label>
+            <input id="courseNameInput" type="text" placeholder="e.g. Data Structures" required>
+          </div>
+          <div>
+            <label for="courseCreditsInput">Credits</label>
+            <input id="courseCreditsInput" type="number" min="1" max="10" placeholder="e.g. 4" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Add Course</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="cards dept-detail-layout">
+      <div class="card">
+        <h3>Department Faculty</h3>
+        <div class="table-wrapper">
+          <table class="manage-users-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+              </tr>
+            </thead>
+            <tbody id="facultyTableBody">
+              <tr><td colspan="2">No faculty added yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Department Courses</h3>
+        <div class="table-wrapper">
+          <table class="manage-users-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Credits</th>
+              </tr>
+            </thead>
+            <tbody id="courseTableBody">
+              <tr><td colspan="3">No courses added yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Branches</h3>
+      <p id="departmentDetailMessage" class="admin-user-message" role="status" aria-live="polite"></p>
+      <div class="table-wrapper">
+        <table class="manage-users-table">
+          <thead>
+            <tr>
+              <th>Branch Code</th>
+              <th>Branch Name</th>
+              <th>College Years</th>
+              <th>Batches</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="branchTableBody">
+                <tr><td colspan="5">Loading branches...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="branchModalOverlay" role="dialog" aria-modal="true" aria-labelledby="branchModalTitle">
+  <div class="modal">
+    <div class="flex items-center justify-between mb-4">
+      <h3 id="branchModalTitle" class="font-semibold">Edit Branch</h3>
+      <button class="btn-ghost p-1 rounded" id="closeBranchModalBtn" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <form id="editBranchForm" class="admin-user-form" novalidate>
+      <input id="originalBranchCodeInput" type="hidden">
+      <div>
+        <label for="editBranchCodeInput">Branch Code</label>
+        <input id="editBranchCodeInput" type="text" placeholder="e.g. CSE" required>
+      </div>
+      <div>
+        <label for="editBranchNameInput">Branch Name</label>
+        <input id="editBranchNameInput" type="text" required>
+      </div>
+      <div>
+        <label for="editBranchCollegeYearsInput">No. of College Years</label>
+        <select id="editBranchCollegeYearsInput" required>
+          <option value="">Select years</option>
+          <option value="1">1 Year</option>
+          <option value="2">2 Years</option>
+          <option value="3">3 Years</option>
+          <option value="4">4 Years</option>
+          <option value="5">5 Years</option>
+        </select>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button type="button" class="btn btn-secondary flex-1" id="cancelBranchEditBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary flex-1">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/department-detail.js"></script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Course Detail</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+  <div class="sidebar">
+    <h2>FACULTY</h2>
+    <a href="faculty.html">Dashboard</a>
+    <a href="faculty-courses.html" class="active">My Courses</a>
+    <a href="faculty-timetable.html">View Timetable</a>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span>Course Detail</span>
+      <button class="btn btn-secondary" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="page-breadcrumbs">
+      <a href="faculty-courses.html">My Courses</a>
+      <span>/</span>
+      <span>Course Detail</span>
+    </div>
+
+    <div class="card">
+      <h3 id="courseTitle">-</h3>
+      <p id="courseMeta" class="manage-note">-</p>
+      <div class="attendance-summary" id="attendanceSummary">
+        <div class="summary-item">
+          <span class="summary-label">Class Students</span>
+          <strong id="summaryTotal">0</strong>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Present</span>
+          <strong id="summaryPresent">0</strong>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Absent</span>
+          <strong id="summaryAbsent">0</strong>
+        </div>
+      </div>
+    </div>
+
+    <br>
+
+    <div class="card">
+      <div class="admin-user-grid">
+        <div>
+          <label for="classDate">Class Date</label>
+          <input id="classDate" type="date">
+        </div>
+      </div>
+      <div class="course-actions-row">
+        <button id="loadClassSheetBtn" class="btn btn-secondary" type="button">Load Class Sheet</button>
+        <button id="markAllPresentBtn" class="btn btn-secondary" type="button">Mark All Present</button>
+        <button id="markAllAbsentBtn" class="btn btn-secondary" type="button">Mark All Absent</button>
+        <button id="saveClassAttendanceBtn" class="btn btn-primary" type="button">Save Attendance for This Class</button>
+      </div>
+      <p id="courseDetailMessage" class="admin-user-message" role="status" aria-live="polite"></p>
+
+      <div class="table-wrapper" style="margin-top: 12px;">
+        <table class="manage-users-table">
+          <thead>
+            <tr>
+              <th>Roll No</th>
+              <th>Student</th>
+              <th>Attendance %</th>
+              <th id="classColumnTitle">New Class Status</th>
+            </tr>
+          </thead>
+          <tbody id="courseStudentsTableBody">
+            <tr>
+              <td colspan="4">Loading students...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/faculty-course-detail.js"></script>
+</body>
+</html>

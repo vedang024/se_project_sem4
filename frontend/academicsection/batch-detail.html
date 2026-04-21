@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Batch Detail - Admin</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="batch-detail-page">
+<div class="container">
+  <div class="sidebar">
+    <a href="admin.html"><h3>ADMIN</h3></a>
+    <a href="manage-users.html">Manage Users</a>
+    <a href="departments.html" class="active">Departments</a>
+    <a href="applications.html">Applications</a>
+    <a href="timetable.html">Timetable</a>
+    <a href="course-enrollment.html">Course Enrollment</a>
+    <a href="view-courses-for-batch.html">View Courses for Batch</a>
+    <a href="view-students-in-course.html">View Students in Course</a>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span id="batchTitle">Batch Detail</span>
+      <div class="dept-top-actions">
+        <a class="btn btn-secondary" id="batchBackBtn" href="departments.html">Back</a>
+        <button class="btn btn-secondary" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="cards dept-detail-summary" id="batchSummaryCards">
+      <div class="card"><h3>Loading...</h3></div>
+    </div>
+
+    <div class="cards dept-detail-layout batch-detail-grid">
+      <div class="card">
+        <h3>Batch Information</h3>
+        <p id="batchDetailMessage" class="admin-user-message" role="status" aria-live="polite"></p>
+        <div class="table-wrapper">
+          <table class="manage-users-table">
+            <tbody id="batchDetailTableBody">
+              <tr><td>Loading batch info...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Edit Batch</h3>
+        <form id="batchEditForm" class="admin-user-form" novalidate>
+          <div>
+            <label for="batchDepartmentInput">Department</label>
+            <input id="batchDepartmentInput" type="text" readonly>
+          </div>
+          <div>
+            <label for="batchBranchInput">Branch</label>
+            <input id="batchBranchInput" type="text" readonly>
+          </div>
+          <div>
+            <label for="batchYearInput">Semester</label>
+            <select id="batchYearInput" required>
+              <option value="">Select semester</option>
+              <option value="1">Semester I</option>
+              <option value="2">Semester II</option>
+              <option value="3">Semester III</option>
+              <option value="4">Semester IV</option>
+              <option value="5">Semester V</option>
+              <option value="6">Semester VI</option>
+              <option value="7">Semester VII</option>
+              <option value="8">Semester VIII</option>
+            </select>
+          </div>
+          <div>
+            <label for="batchCollegeYearInput">College Year</label>
+            <select id="batchCollegeYearInput" required>
+              <option value="">Select college year</option>
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3">3rd Year</option>
+              <option value="4">4th Year</option>
+              <option value="5">5th Year</option>
+            </select>
+          </div>
+          <div>
+            <label for="batchNameInput">Batch Name (Auto)</label>
+            <input id="batchNameInput" type="text" readonly>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/batch-detail.js"></script>
+</body>
+</html>

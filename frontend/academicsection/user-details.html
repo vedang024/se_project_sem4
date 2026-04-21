@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Details - Admin</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="container">
+  <div class="sidebar">
+    <a href="admin.html"><h3>ADMIN</h3></a>
+    <a href="admin.html">Dashboard</a>
+    <a href="manage-users.html" class="active">Manage Users</a>
+    <a href="departments.html">Departments</a>
+    <a href="applications.html">Applications</a>
+    <a href="timetable.html">Timetable</a>
+    <a href="course-enrollment.html">Course Enrollment</a>
+    <a href="view-courses-for-batch.html">View Courses for Batch</a>
+    <a href="view-students-in-course.html">View Students in Course</a>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span>User Details</span>
+      <div class="flex gap-2">
+        <button class="btn btn-primary" id="saveUserBtn">Save Changes</button>
+        <button class="btn btn-secondary" id="deleteUserBtn">Delete User</button>
+        <button class="btn btn-secondary" onclick="window.location.href='manage-users.html'">Back</button>
+        <button class="btn btn-secondary" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Profile</h3>
+      <div class="table-wrapper">
+        <table class="manage-users-table">
+          <tbody id="userProfileBody">
+            <tr><td colspan="2">Loading profile...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <br>
+
+    <div class="card">
+      <h3>Edit User</h3>
+      <form id="editUserForm" class="admin-user-form" novalidate>
+        <div class="admin-user-grid">
+          <div>
+            <label for="editFullNameInput">Name</label>
+            <input id="editFullNameInput" type="text" required>
+          </div>
+          <div>
+            <label for="editEmailInput">Email</label>
+            <input id="editEmailInput" type="email" required>
+          </div>
+          <div>
+            <label for="editRoleSelect">Role</label>
+            <select id="editRoleSelect" required>
+              <option value="student">Student</option>
+              <option value="faculty">Faculty</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="admin-user-grid">
+          <div id="editRollNoWrap">
+            <label for="editRollNoInput">Roll No</label>
+            <input id="editRollNoInput" type="text" placeholder="Roll number">
+          </div>
+          <div>
+            <label for="editDepartmentSelect">Department</label>
+            <select id="editDepartmentSelect">
+              <option value="">Select department</option>
+            </select>
+          </div>
+          <div id="editBranchWrap">
+            <label for="editBranchSelect">Branch</label>
+            <select id="editBranchSelect">
+              <option value="">Select branch</option>
+            </select>
+          </div>
+          <div id="editBatchWrap">
+            <label for="editBatchSelect">Batch</label>
+            <select id="editBatchSelect">
+              <option value="">Select batch</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="admin-user-grid" id="editFacultyInfoFields" style="display:none;">
+          <div>
+            <label for="editFacultyDesignationInput">Designation</label>
+            <input id="editFacultyDesignationInput" type="text">
+          </div>
+          <div>
+            <label for="editFacultyHonorInput">Honor</label>
+            <input id="editFacultyHonorInput" type="text">
+          </div>
+          <div>
+            <label for="editFacultyExperienceInput">Experience</label>
+            <input id="editFacultyExperienceInput" type="text">
+          </div>
+          <div>
+            <label for="editFacultyPhoneInput">Phone Number</label>
+            <input id="editFacultyPhoneInput" type="text">
+          </div>
+          <div>
+            <label for="editFacultyResearchAreaInput">Research Area</label>
+            <input id="editFacultyResearchAreaInput" type="text">
+          </div>
+          <div>
+            <label for="editFacultyAddressInput">Address</label>
+            <input id="editFacultyAddressInput" type="text">
+          </div>
+        </div>
+
+        <div class="admin-user-grid">
+          <div>
+            <label for="editNewPasswordInput">New Password</label>
+            <input id="editNewPasswordInput" type="password" placeholder="Leave blank to keep current password">
+          </div>
+          <div>
+            <label for="editConfirmPasswordInput">Confirm Password</label>
+            <input id="editConfirmPasswordInput" type="password" placeholder="Re-enter new password">
+          </div>
+        </div>
+      </form>
+      <p id="editMessage" class="admin-user-message"></p>
+    </div>
+
+    <br>
+
+    <div class="card" id="marksGradesCard">
+      <h3>Marks & Grades</h3>
+      <div class="table-wrapper">
+        <table class="manage-users-table">
+          <thead>
+            <tr>
+              <th>Course Code</th>
+              <th>Course Name</th>
+              <th>Semester</th>
+              <th>Marks</th>
+              <th>Grade</th>
+            </tr>
+          </thead>
+          <tbody id="marksGradesBody">
+            <tr><td colspan="5">Loading marks and grades...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="detailMessage" class="admin-user-message"></p>
+    </div>
+  </div>
+</div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/user-details.js"></script>
+</body>
+</html>

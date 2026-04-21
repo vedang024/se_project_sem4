@@ -859,6 +859,309 @@ body {
   margin-bottom: 1rem;
 }
 
+/* Admin user management */
+.admin-user-card p {
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+.admin-user-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-user-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.role-meta {
+  display: none;
+}
+
+.admin-user-form label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.45rem;
+}
+
+.admin-user-form input,
+.admin-user-form select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
+  color: var(--fg);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-user-form input:focus,
+.admin-user-form select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.admin-user-message {
+  min-height: 1.2rem;
+  font-size: 0.9rem;
+}
+
+.admin-user-message.error {
+  color: #fca5a5;
+}
+
+.admin-user-message.success {
+  color: #86efac;
+}
+
+.manage-toolbar {
+  margin-bottom: 1.5rem;
+}
+
+.manage-note {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.course-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.course-item-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.course-item-card .btn-sm {
+  width: 100%;
+  max-width: 220px;
+}
+
+.course-actions-row {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.page-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.page-breadcrumbs a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.page-breadcrumbs a:hover {
+  text-decoration: underline;
+}
+
+.attendance-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.summary-item {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+.summary-label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-bottom: 0.35rem;
+}
+
+.summary-item strong {
+  font-size: 1.15rem;
+}
+
+.departments-admin-page .cards {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  align-items: stretch;
+}
+
+.departments-admin-page .cards .card {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.departments-admin-page .dept-stats {
+  flex: 1;
+}
+
+.departments-admin-page .dept-actions {
+  margin-top: 1rem;
+}
+
+.dept-action-row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.dept-action-row .btn-sm {
+  width: 100%;
+}
+
+.batch-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  color: var(--fg);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.batch-link:hover {
+  color: var(--accent);
+}
+
+.dept-top-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.dept-top-actions .btn,
+.dept-action-row .btn,
+.dept-action-row a {
+  white-space: nowrap;
+}
+
+.dept-detail-summary {
+  margin-bottom: 1rem;
+}
+
+.dept-detail-layout {
+  margin-bottom: 1rem;
+}
+
+.batch-detail-page .dept-detail-summary .card {
+  min-height: 140px;
+}
+
+.batch-detail-page .dept-detail-summary p {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.batch-detail-page .batch-detail-grid {
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.batch-detail-page .batch-detail-grid .card {
+  min-height: 100%;
+}
+
+.batch-detail-page .batch-detail-grid .admin-user-form {
+  gap: 0.9rem;
+}
+
+.batch-detail-page .batch-detail-grid input[readonly] {
+  opacity: 0.9;
+}
+
+@media (max-width: 1024px) {
+  .batch-detail-page .batch-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.manage-filter-row {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 0.8rem;
+}
+
+.manage-filter-row label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
+
+.manage-filter-row select {
+  min-width: 220px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+}
+
+.manage-users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.manage-users-table th,
+.manage-users-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.8rem 0.7rem;
+  text-align: left;
+}
+
+.manage-users-table th {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.manage-users-table td {
+  font-size: 0.92rem;
+}
+
+@media (max-width: 768px) {
+  .admin-user-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .course-item-card .btn-sm {
+    max-width: 100%;
+  }
+
+  .attendance-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .manage-filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .manage-filter-row select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .departments-admin-page .cards .card {
+    min-height: 0;
+  }
+}
+
 .tab-btn {
   flex: 1;
   padding: 0.5rem;

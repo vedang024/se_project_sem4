@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Attendance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+  <div class="sidebar">
+    <h2>STUDENT</h2>
+    <a href="student.html">Dashboard</a>
+    <a href="student-courses.html">My Courses</a>
+    <a href="student-attendance.html" class="active">Attendance</a>
+    <a href="student-results.html">Results</a>
+    <a href="#">Announcements</a>
+    <a href="student-timetable.html">View Timetable</a>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span>Attendance</span>
+      <button class="btn btn-secondary" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="card" style="margin-bottom: 16px;">
+      <h3>Current Semester Attendance</h3>
+      <p id="attendanceMeta" class="manage-note">Loading current semester attendance...</p>
+    </div>
+
+    <div class="card">
+      <div class="table-wrapper">
+        <table class="manage-users-table">
+          <thead>
+            <tr>
+              <th>Course</th>
+              <th>Faculty</th>
+              <th>Present / Total</th>
+              <th>Attendance %</th>
+              <th>Missed Classes</th>
+            </tr>
+          </thead>
+          <tbody id="attendanceTableBody">
+            <tr><td colspan="5">Loading attendance...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/auth.js"></script>
+<script src="js/student-attendance.js"></script>
+</body>
+</html>

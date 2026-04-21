@@ -2,30 +2,97 @@
 <html>
 <head>
   <title>Faculty Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div class="container">
   <div class="sidebar">
     <h2>FACULTY</h2>
-    <a href="#">Dashboard</a>
-    <a href="#">My Courses</a>
-    <a href="#">Attendance</a>
-    <a href="#">Grades</a>
-    <a href="#">Announcements</a>
+    <a href="faculty.html" class="active">Dashboard</a>
+    <a href="faculty-courses.html">My Courses</a>
+    <a href="faculty-timetable.html">View Timetable</a>
   </div>
 
   <div class="main">
-    <div class="topbar">Faculty Dashboard</div>
+    <div class="topbar">
+      <span>Faculty Dashboard</span>
+      <button class="btn btn-secondary" onclick="logout()">Logout</button>
+    </div>
 
     <div class="cards">
-      <div class="card"><h3>CS101</h3><p>Intro to Programming</p></div>
-      <div class="card"><h3>MA202</h3><p>Linear Algebra</p></div>
+      <div class="card">
+        <h3>Name</h3>
+        <p id="dashFacultyName">-</p>
+      </div>
+      <div class="card">
+        <h3>Department</h3>
+        <p id="dashDepartment">-</p>
+      </div>
+      <div class="card">
+        <h3>Assigned Courses</h3>
+        <p id="dashCourseCount">0</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Faculty Information</h3>
+      <div class="admin-user-grid">
+        <div>
+          <label>Designation</label>
+          <p id="dashDesignation" class="manage-note">-</p>
+        </div>
+        <div>
+          <label>Email</label>
+          <p id="dashEmail" class="manage-note">-</p>
+        </div>
+        <div>
+          <label>Phone</label>
+          <p id="dashPhone" class="manage-note">-</p>
+        </div>
+        <div>
+          <label>Research Area</label>
+          <p id="dashResearch" class="manage-note">-</p>
+        </div>
+      </div>
     </div>
 
     <br>
 
+    <div class="card">
+      <div class="section-header">
+        <h3>My Courses</h3>
+        <a href="faculty-courses.html" class="btn btn-primary btn-sm" style="max-width: 220px;">Open My Courses</a>
+      </div>
+      <div id="facultyCoursePreview" class="application-list"></div>
+    </div>
+
+    <br>
+
+    <div class="card">
+      <h3>Change Password</h3>
+      <form id="facultyPasswordForm" class="admin-user-form" novalidate>
+        <div class="admin-user-grid">
+          <div>
+            <label for="oldPassword">Current Password</label>
+            <input id="oldPassword" type="password" required>
+          </div>
+          <div>
+            <label for="newPassword">New Password</label>
+            <input id="newPassword" type="password" minlength="8" required>
+          </div>
+          <div>
+            <label for="confirmNewPassword">Confirm New Password</label>
+            <input id="confirmNewPassword" type="password" minlength="8" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Update Password</button>
+        <p id="facultyPasswordMessage" class="admin-user-message" role="status" aria-live="polite"></p>
+      </form>
+    </div>
   </div>
 </div>
+<script src="js/auth.js"></script>
+<script src="js/faculty-dashboard.js"></script>
 </body>
 </html>

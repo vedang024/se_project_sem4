@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View Courses for Batch - Admin</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="container">
+  <div class="sidebar">
+    <a href="admin.html"><h3>ADMIN</h3></a>
+    <a href="manage-users.html">Manage Users</a>
+    <a href="departments.html">Departments</a>
+    <a href="applications.html">Applications</a>
+    <a href="timetable.html">Timetable</a>
+    <a href="course-enrollment.html">Course Enrollment</a>
+    <a href="view-courses-for-batch.html" class="active">View Courses for Batch</a>
+    <a href="view-students-in-course.html">View Students in Course</a>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span>View Courses for Batch</span>
+      <div class="dept-top-actions">
+        <button class="btn btn-secondary" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Select Batch to View Assigned Courses</h3>
+      <form id="filterForm" class="admin-user-form" novalidate>
+        <div class="admin-user-grid">
+          <div>
+            <label for="departmentSelect">Department</label>
+            <select id="departmentSelect" required>
+              <option value="">Select department</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="branchSelect">Branch</label>
+            <select id="branchSelect" required>
+              <option value="">Select branch</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="batchSelect">Batch</label>
+          <select id="batchSelect" required>
+            <option value="">Select batch</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Load Courses</button>
+        <p id="filterMessage" class="admin-user-message" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>Courses Assigned to Selected Batch</h3>
+      <div id="batchInfo" style="margin-bottom: 20px; display: none;">
+        <p><strong>Batch:</strong> <span id="infoBatchName"></span></p>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="manage-users-table">
+          <thead>
+            <tr>
+              <th>Course Code</th>
+              <th>Course Name</th>
+              <th>Credits</th>
+              <th>Department</th>
+            </tr>
+          </thead>
+          <tbody id="coursesTableBody">
+            <tr><td colspan="4">Select a batch to view assigned courses.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/view-courses-for-batch.js"></script>
+</body>
+</html>

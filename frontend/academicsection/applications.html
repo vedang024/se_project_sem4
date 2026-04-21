@@ -17,14 +17,21 @@
   <!-- Sidebar -->
   <div class="sidebar">
     <a href="admin.html"><h3>ADMIN</h3></a>
+    <a href="manage-users.html">Manage Users</a>
     <a href="departments.html">Departments</a>
     <a href="applications.html" class="active">Applications</a>
     <a href="timetable.html">Timetable</a>
+    <a href="course-enrollment.html">Course Enrollment</a>
+    <a href="view-courses-for-batch.html">View Courses for Batch</a>
+    <a href="view-students-in-course.html">View Students in Course</a>
   </div>
 
   <!-- Main Content -->
   <div class="main">
-    <div class="topbar">Applications Management</div>
+    <div class="topbar">
+      <span>Applications Management</span>
+      <button class="btn btn-secondary" onclick="logout()">Logout</button>
+    </div>
 
     <div class="app-layout">
       
@@ -177,5 +184,6 @@
 
 <!-- Custom JS -->
 <script src="../js/script.js"></script>
+<script src="../js/auth.js"></script>
 </body>
 </html>

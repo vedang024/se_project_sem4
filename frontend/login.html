@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ERP Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body class="login-body">
+  <div class="grid-overlay"></div>
+
+  <main class="login-shell">
+    <section class="brand-panel">
+      <p class="mono badge">SE PROJECT SEM4</p>
+      <h1>College ERP Portal</h1>
+      <p>One login for students, faculty, and admins. Select your role and continue to your dashboard.</p>
+      <ul class="role-list">
+        <li><span>Student</span><small>Attendance, grades, announcements</small></li>
+        <li><span>Faculty</span><small>Courses, attendance, communication</small></li>
+        <li><span>Admin</span><small>Departments, applications, timetable, user management</small></li>
+      </ul>
+    </section>
+
+    <section class="auth-card">
+      <h2>Sign In</h2>
+      <p class="subtext">Use your ERP credentials</p>
+      <p class="subtext">Default admin: masterAdmin@erp.ac.in / masterAdmin@123</p>
+
+      <form id="loginForm" novalidate>
+        <label for="role">Role</label>
+        <select id="role" name="role" required>
+          <option value="">Select role</option>
+          <option value="student">Student</option>
+          <option value="faculty">Faculty</option>
+          <option value="admin">Admin</option>
+        </select>
+
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" placeholder="Enter username" required>
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter password" required>
+
+        <button id="loginButton" type="submit">Login</button>
+        <p id="message" class="message" role="status" aria-live="polite"></p>
+        <p class="auth-switch">User creation is managed inside the admin dashboard by master admin.</p>
+      </form>
+    </section>
+  </main>
+
+  <script src="js/login.js"></script>
+</body>
+</html>
