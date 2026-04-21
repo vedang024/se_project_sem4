@@ -28,6 +28,21 @@ function logout() {
     return;
   }
 
+  if (currentPath.endsWith("/faculty-courses.html") && user.role !== "faculty") {
+    window.location.href = getLoginPath();
+    return;
+  }
+
+  if (currentPath.endsWith("/faculty-course-detail.html") && user.role !== "faculty") {
+    window.location.href = getLoginPath();
+    return;
+  }
+
+  if (currentPath.endsWith("/faculty-timetable.html") && user.role !== "faculty") {
+    window.location.href = getLoginPath();
+    return;
+  }
+
   if (currentPath.endsWith("/student-timetable.html") && user.role !== "student") {
     window.location.href = getLoginPath();
     return;
@@ -55,6 +70,7 @@ function logout() {
     }
 
     if (isTimetablePage && user.role === "faculty") {
+      window.location.href = "../faculty-timetable.html";
       return;
     }
 

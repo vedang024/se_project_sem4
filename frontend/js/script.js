@@ -86,7 +86,11 @@ async function initTimetable() {
 
   setTimetableMode();
   initTimetableEvents();
-  await loadAvailableBatches();
+  if (timetableReadOnly) {
+    availableBatches = [];
+  } else {
+    await loadAvailableBatches();
+  }
   await loadTimetableFromServer();
 }
 
@@ -161,6 +165,10 @@ function setTimetableMode() {
       if (pageTitle) pageTitle.textContent = 'My Timetable';
       if (pageSubtitle) pageSubtitle.textContent = 'Only your branch timetable is shown';
       if (footerNote) footerNote.textContent = 'Student view. Timetable updates are managed by admins.';
+    } else if (user?.role === 'faculty') {
+      if (pageTitle) pageTitle.textContent = 'My Teaching Timetable';
+      if (pageSubtitle) pageSubtitle.textContent = 'Only batches where you are assigned courses are shown';
+      if (footerNote) footerNote.textContent = 'Faculty view. Timetable updates are managed by admins.';
     } else {
       if (pageTitle) pageTitle.textContent = 'Timetable Viewer';
       if (pageSubtitle) pageSubtitle.textContent = 'Read-only timetable view for students and faculty';
@@ -171,7 +179,18 @@ function setTimetableMode() {
 
 async function loadTimetableFromServer() {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/timetable/`);
+    const user = getCurrentUser();
+    const isFaculty = user?.role === 'faculty';
+    const response = await fetch(
+      `${API_BASE_URL}${isFaculty ? '/api/faculty/timetable/' : '/api/timetable/'}`,
+      isFaculty
+        ? {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: user.username }),
+          }
+        : undefined
+    );
     const data = await response.json();
 
     if (!response.ok || !data.success) {
@@ -519,6 +538,8 @@ function renderTable() {
                     <span class="faculty">${cellData.faculty}</span>
                     <span class="room">${cellData.room}</span>
                   </div>
+                ` : timetableReadOnly ? `
+                  <div class="flex items-center justify-center h-full" style="color: var(--muted);">-</div>
                 ` : `
                   <div class="flex items-center justify-center h-full" style="color: var(--muted);">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">

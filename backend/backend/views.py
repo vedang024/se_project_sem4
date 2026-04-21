@@ -1466,6 +1466,87 @@ def get_timetable_api(request):
 
 @csrf_exempt
 @require_http_methods(["POST", "OPTIONS"])
+def get_faculty_timetable_api(request):
+    if request.method == "OPTIONS":
+        return cors_response({"detail": "CORS preflight"})
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return cors_response({"success": False, "message": "Invalid JSON payload."}, status=400)
+
+    username = normalize_erp_email(payload.get("username", ""))
+    if not username:
+        return cors_response({"success": False, "message": "Username is required."}, status=400)
+
+    faculty = Faculty.objects.filter(email__iexact=username).first()
+    if faculty is None:
+        return cors_response({"success": False, "message": "Faculty not found."}, status=404)
+
+    assigned_batch_ids = {
+        str(batch_id)
+        for batch_id in CourseBatch.objects.filter(faculty=faculty)
+        .values_list("batch_id", flat=True)
+        .distinct()
+    }
+
+    record = SharedTimetable.objects.order_by("-updated_at").first()
+    empty_timetable = {
+        "batches": [],
+        "timetableData": {
+            "monday": {},
+            "tuesday": {},
+            "wednesday": {},
+            "thursday": {},
+            "friday": {},
+            "saturday": {},
+        },
+    }
+
+    if record is None or not assigned_batch_ids:
+        return cors_response(
+            {
+                "success": True,
+                "updated_at": record.updated_at.isoformat() if record else None,
+                "timetable": empty_timetable,
+            }
+        )
+
+    record_data = record.data if isinstance(record.data, dict) else {}
+    published_batches = record_data.get("batches", [])
+    published_timetable = record_data.get("timetableData", {})
+
+    filtered_batches = []
+    if isinstance(published_batches, list):
+        filtered_batches = [
+            batch
+            for batch in published_batches
+            if str(batch.get("branch_batch_id") or batch.get("id") or "") in assigned_batch_ids
+        ]
+
+    filtered_timetable = {}
+    for day in ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]:
+        day_data = published_timetable.get(day, {}) if isinstance(published_timetable, dict) else {}
+        filtered_timetable[day] = {
+            str(batch_id): slots
+            for batch_id, slots in day_data.items()
+            if str(batch_id) in assigned_batch_ids
+        } if isinstance(day_data, dict) else {}
+
+    return cors_response(
+        {
+            "success": True,
+            "updated_at": record.updated_at.isoformat(),
+            "timetable": {
+                "batches": filtered_batches,
+                "timetableData": filtered_timetable,
+            },
+        }
+    )
+
+
+@csrf_exempt
+@require_http_methods(["POST", "OPTIONS"])
 def save_timetable_api(request):
     if request.method == "OPTIONS":
         return cors_response({"detail": "CORS preflight"})
@@ -1741,6 +1822,129 @@ def get_faculty_courses_api(request):
                 "department": faculty.department.dept_name if faculty.department else None,
             },
             "courses": offerings,
+        }
+    )
+
+
+@csrf_exempt
+@require_http_methods(["POST", "OPTIONS"])
+def get_faculty_profile_api(request):
+    if request.method == "OPTIONS":
+        return cors_response({"detail": "CORS preflight"})
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return cors_response({"success": False, "message": "Invalid JSON payload."}, status=400)
+
+    username = normalize_erp_email(payload.get("username", ""))
+    if not username:
+        return cors_response({"success": False, "message": "Username is required."}, status=400)
+
+    faculty = Faculty.objects.select_related("department").filter(email__iexact=username).first()
+    if faculty is None:
+        return cors_response({"success": False, "message": "Faculty not found."}, status=404)
+
+    assigned_courses = CourseBatch.objects.filter(faculty=faculty).count()
+
+    return cors_response(
+        {
+            "success": True,
+            "profile": {
+                "id": faculty.faculty_id,
+                "name": faculty.name,
+                "email": faculty.email,
+                "designation": faculty.designation or "Faculty Member",
+                "department": faculty.department.dept_name if faculty.department else "-",
+                "phone": faculty.phone_number or "-",
+                "research_area": faculty.research_area or "-",
+                "address": faculty.address or "-",
+                "honor": faculty.honor or "-",
+                "experience": faculty.experience or "-",
+                "assigned_courses": assigned_courses,
+            },
+        }
+    )
+
+
+@csrf_exempt
+@require_http_methods(["POST", "OPTIONS"])
+def get_faculty_course_students_api(request):
+    if request.method == "OPTIONS":
+        return cors_response({"detail": "CORS preflight"})
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return cors_response({"success": False, "message": "Invalid JSON payload."}, status=400)
+
+    username = normalize_erp_email(payload.get("username", ""))
+    batch_id = payload.get("batch_id")
+    course_id = str(payload.get("course_id", "")).strip().upper()
+
+    if not username or not batch_id or not course_id:
+        return cors_response({"success": False, "message": "Username, batch, and course are required."}, status=400)
+
+    faculty = Faculty.objects.filter(email__iexact=username).first()
+    if faculty is None:
+        return cors_response({"success": False, "message": "Faculty not found."}, status=404)
+
+    try:
+        course_batch = CourseBatch.objects.select_related("batch", "course").get(
+            batch_id=batch_id,
+            course_id=course_id,
+            faculty=faculty,
+        )
+    except CourseBatch.DoesNotExist:
+        return cors_response({"success": False, "message": "This course is not assigned to the logged-in faculty."}, status=403)
+
+    profiles = UserProfile.objects.filter(batch=course_batch.batch, role="student").select_related("user").order_by("roll_no", "user__first_name")
+
+    students = []
+    for profile in profiles:
+        roll_no = str(profile.roll_no or "").strip().upper()
+        student_record = Student.objects.filter(rollno__iexact=roll_no).first() if roll_no else None
+
+        attendance_rows = Attendance.objects.none()
+        if student_record:
+            attendance_rows = Attendance.objects.filter(student=student_record, course=course_batch.course)
+
+        total_classes = attendance_rows.count()
+        present_classes = attendance_rows.filter(status="Present").count()
+        percentage = round((present_classes * 100.0 / total_classes), 2) if total_classes else 0.0
+
+        students.append(
+            {
+                "id": profile.user.id,
+                "name": profile.user.first_name or profile.user.username,
+                "roll_no": roll_no,
+                "email": profile.user.email or "-",
+                "phone": "-",
+                "attendance": {
+                    "present": present_classes,
+                    "total": total_classes,
+                    "percentage": percentage,
+                },
+            }
+        )
+
+    return cors_response(
+        {
+            "success": True,
+            "batch": {
+                "id": course_batch.batch.id,
+                "name": course_batch.batch.batch_name,
+                "semester": course_batch.batch.year,
+                "semester_roman": semester_to_roman(course_batch.batch.year),
+                "branch_id": course_batch.batch.branch.branch_id,
+                "branch_name": course_batch.batch.branch.branch_name,
+            },
+            "course": {
+                "id": course_batch.course.course_id,
+                "name": course_batch.course.course_name,
+                "credits": course_batch.course.credits,
+            },
+            "students": students,
         }
     )
 
@@ -2676,4 +2880,3 @@ def update_admin_api(request):
             {"success": False, "message": f"Error updating admin: {str(e)}"}, 
             status=500
         )
-

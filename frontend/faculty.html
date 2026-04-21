@@ -2,18 +2,16 @@
 <html>
 <head>
   <title>Faculty Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div class="container">
   <div class="sidebar">
     <h2>FACULTY</h2>
-    <a href="#">Dashboard</a>
-    <a href="#">My Courses</a>
-    <a href="#">Attendance</a>
-    <a href="#">Grades</a>
-    <a href="#">Announcements</a>
-    <a href="academicsection/timetable.html">View Timetable</a>
+    <a href="faculty.html" class="active">Dashboard</a>
+    <a href="faculty-courses.html">My Courses</a>
+    <a href="faculty-timetable.html">View Timetable</a>
   </div>
 
   <div class="main">
@@ -23,8 +21,50 @@
     </div>
 
     <div class="cards">
-      <div class="card"><h3>CS101</h3><p>Intro to Programming</p></div>
-      <div class="card"><h3>MA202</h3><p>Linear Algebra</p></div>
+      <div class="card">
+        <h3>Name</h3>
+        <p id="dashFacultyName">-</p>
+      </div>
+      <div class="card">
+        <h3>Department</h3>
+        <p id="dashDepartment">-</p>
+      </div>
+      <div class="card">
+        <h3>Assigned Courses</h3>
+        <p id="dashCourseCount">0</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Faculty Information</h3>
+      <div class="admin-user-grid">
+        <div>
+          <label>Designation</label>
+          <p id="dashDesignation" class="manage-note">-</p>
+        </div>
+        <div>
+          <label>Email</label>
+          <p id="dashEmail" class="manage-note">-</p>
+        </div>
+        <div>
+          <label>Phone</label>
+          <p id="dashPhone" class="manage-note">-</p>
+        </div>
+        <div>
+          <label>Research Area</label>
+          <p id="dashResearch" class="manage-note">-</p>
+        </div>
+      </div>
+    </div>
+
+    <br>
+
+    <div class="card">
+      <div class="section-header">
+        <h3>My Courses</h3>
+        <a href="faculty-courses.html" class="btn btn-primary btn-sm" style="max-width: 220px;">Open My Courses</a>
+      </div>
+      <div id="facultyCoursePreview" class="application-list"></div>
     </div>
 
     <br>
@@ -50,44 +90,6 @@
         <p id="facultyPasswordMessage" class="admin-user-message" role="status" aria-live="polite"></p>
       </form>
     </div>
-
-    <br>
-
-    <div class="card">
-      <h3>Mark Attendance</h3>
-      <div class="admin-user-grid">
-        <div>
-          <label for="facultyCourseSelect">Course & Batch</label>
-          <select id="facultyCourseSelect"></select>
-        </div>
-        <div>
-          <label for="attendanceDate">Date</label>
-          <input id="attendanceDate" type="date">
-        </div>
-      </div>
-      <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
-        <button id="loadAttendanceStudentsBtn" class="btn btn-secondary" type="button">Load Students</button>
-        <button id="saveAttendanceBtn" class="btn btn-primary" type="button">Save Attendance</button>
-      </div>
-      <p id="facultyAttendanceMessage" class="admin-user-message" role="status" aria-live="polite"></p>
-      <div class="table-wrapper" style="margin-top: 12px;">
-        <table class="manage-users-table">
-          <thead>
-            <tr>
-              <th>Roll No</th>
-              <th>Student</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="facultyAttendanceTableBody">
-            <tr>
-              <td colspan="3">Select a course and date, then click Load Students.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
   </div>
 </div>
 <script src="js/auth.js"></script>
