@@ -39,3 +39,46 @@ class Announcement(models.Model):
     content = models.TextField()
     date = models.DateField(auto_now_add=True)
     target_group = models.CharField(max_length=50)
+
+
+class CourseAssessmentComponent(models.Model):
+    component_id = models.AutoField(primary_key=True)
+    batch = models.ForeignKey('academicsection.BranchBatch', on_delete=models.CASCADE, related_name='assessment_components')
+    course = models.ForeignKey('academicsection.Course', on_delete=models.CASCADE, related_name='assessment_components')
+    faculty = models.ForeignKey('faculty.Faculty', on_delete=models.CASCADE, related_name='assessment_components')
+    title = models.CharField(max_length=100)
+    component_type = models.CharField(max_length=30, default='assignment')
+    max_marks = models.DecimalField(max_digits=7, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('batch', 'course', 'title')
+        ordering = ['component_id']
+
+
+class StudentAssessmentScore(models.Model):
+    score_id = models.AutoField(primary_key=True)
+    component = models.ForeignKey(CourseAssessmentComponent, on_delete=models.CASCADE, related_name='scores')
+    student = models.ForeignKey('student.Student', on_delete=models.CASCADE, related_name='assessment_scores')
+    marks_obtained = models.DecimalField(max_digits=7, decimal_places=2)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('component', 'student')
+
+
+class CourseScoresheetSubmission(models.Model):
+    submission_id = models.AutoField(primary_key=True)
+    batch = models.ForeignKey('academicsection.BranchBatch', on_delete=models.CASCADE, related_name='scoresheet_submissions')
+    course = models.ForeignKey('academicsection.Course', on_delete=models.CASCADE, related_name='scoresheet_submissions')
+    faculty = models.ForeignKey('faculty.Faculty', on_delete=models.CASCADE, related_name='scoresheet_submissions')
+    total_students = models.PositiveIntegerField(default=0)
+    total_components = models.PositiveIntegerField(default=0)
+    total_max_marks = models.DecimalField(max_digits=9, decimal_places=2, default=0)
+    average_score = models.DecimalField(max_digits=9, decimal_places=2, default=0)
+    average_percentage = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    message_count = models.PositiveIntegerField(default=0)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-submitted_at']

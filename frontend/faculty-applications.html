@@ -3,28 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Applications - Admin Dashboard</title>
+  <title>Faculty Applications</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div class="container">
   <div class="sidebar">
-    <a href="admin.html"><h3>ADMIN</h3></a>
-    <a href="manage-users.html">Manage Users</a>
-    <a href="departments.html">Departments</a>
-    <a href="applications.html" class="active">Applications</a>
-    <a href="timetable.html">Timetable</a>
-    <a href="course-enrollment.html">Course Enrollment</a>
-    <a href="view-courses-for-batch.html">View Courses for Batch</a>
-    <a href="view-students-in-course.html">View Students in Course</a>
+    <h2>FACULTY</h2>
+    <a href="faculty.html">Dashboard</a>
+    <a href="faculty-courses.html">My Courses</a>
+    <a href="faculty-applications.html" class="active">Applications</a>
+    <a href="faculty-timetable.html">View Timetable</a>
   </div>
 
   <div class="main">
     <div class="topbar">
-      <span>Applications Management</span>
+      <span>Faculty Applications</span>
       <button class="btn btn-secondary" type="button" onclick="logout()">Logout</button>
     </div>
 
@@ -35,7 +32,7 @@
         <div class="app-panel-intro">
           <p class="app-panel-eyebrow">Mailbox</p>
           <h3>Inbox and Sent</h3>
-          <p class="manage-note">Open any application to review full details, approve pending items, or follow up with a response.</p>
+          <p class="manage-note">Open any application to review full details, resolve attendance queries, or follow up with a response.</p>
         </div>
 
         <div class="view-toggle">
@@ -85,20 +82,6 @@
 
                 <div class="recipient-column">
                   <div class="column-header">
-                    <span>Students</span>
-                    <label class="checkbox-container select-all-mini">
-                      <input type="checkbox" id="selectAllStudents" onchange="toggleSelectAll(this, 'studentsList')">
-                      <span class="checkmark"></span>
-                      All
-                    </label>
-                  </div>
-
-                  <input type="text" class="search-input" id="studentSearch" placeholder="Search students..." oninput="filterRecipients('students', this.value)">
-                  <div class="recipient-list" id="studentsList"></div>
-                </div>
-
-                <div class="recipient-column">
-                  <div class="column-header">
                     <span>Faculty</span>
                     <label class="checkbox-container select-all-mini">
                       <input type="checkbox" id="selectAllFaculty" onchange="toggleSelectAll(this, 'facultyList')">
@@ -109,6 +92,20 @@
 
                   <input type="text" class="search-input" id="facultySearch" placeholder="Search faculty..." oninput="filterRecipients('faculty', this.value)">
                   <div class="recipient-list" id="facultyList"></div>
+                </div>
+
+                <div class="recipient-column">
+                  <div class="column-header">
+                    <span>Students</span>
+                    <label class="checkbox-container select-all-mini">
+                      <input type="checkbox" id="selectAllStudents" onchange="toggleSelectAll(this, 'studentsList')">
+                      <span class="checkmark"></span>
+                      All
+                    </label>
+                  </div>
+
+                  <input type="text" class="search-input" id="studentSearch" placeholder="Search students..." oninput="filterRecipients('students', this.value)">
+                  <div class="recipient-list" id="studentsList"></div>
                 </div>
               </div>
             </div>
@@ -144,7 +141,7 @@
   </div>
 </div>
 
-<script src="../js/auth.js"></script>
-<script src="../js/applications.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/applications.js"></script>
 </body>
 </html>

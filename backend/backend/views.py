@@ -2,6 +2,7 @@ import json
 import re
 from datetime import date as date_class
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import Group, User
@@ -12,8 +13,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from academicsection.models import Branch, BranchBatch, Course, CourseBatch, Department, Friday, Monday, Saturday, SharedTimetable, Thursday, Tuesday, UserProfile, Wednesday
-from faculty.models import Attendance, Faculty
-from student.models import Application, Student, StudentCourse
+from faculty.models import Attendance, CourseAssessmentComponent, CourseScoresheetSubmission, Faculty, StudentAssessmentScore
+from student.models import Application, AdminApplication, Student, StudentCourse
 
 
 VALID_ROLES = {"student", "faculty", "admin"}
@@ -42,6 +43,19 @@ GRADE_POINTS_MAP = {
     "F": 0.0,
     "FF": 0.0,
 }
+
+GRADE_BOUNDARIES = [
+    (Decimal("90"), "O"),
+    (Decimal("85"), "A+"),
+    (Decimal("80"), "A"),
+    (Decimal("75"), "A-"),
+    (Decimal("70"), "B+"),
+    (Decimal("65"), "B"),
+    (Decimal("60"), "B-"),
+    (Decimal("55"), "C+"),
+    (Decimal("50"), "C"),
+    (Decimal("40"), "P"),
+]
 
 
 def cors_response(payload, status=200):
@@ -123,6 +137,232 @@ def grade_to_points(grade):
     if not grade_key or grade_key == "-":
         return None
     return GRADE_POINTS_MAP.get(grade_key)
+
+
+def parse_decimal_value(value, default=None):
+    if value is None or str(value).strip() == "":
+        return default
+
+    try:
+        return Decimal(str(value).strip())
+    except (InvalidOperation, ValueError):
+        raise ValueError("Marks values must be valid numbers.")
+
+
+def decimal_to_float(value):
+    if value is None:
+        return None
+    return float(value)
+
+
+def percentage_to_grade(percentage):
+    percentage_value = percentage if isinstance(percentage, Decimal) else parse_decimal_value(percentage, default=Decimal("0"))
+    if percentage_value is None:
+        return "-"
+
+    for cutoff, grade in GRADE_BOUNDARIES:
+        if percentage_value >= cutoff:
+            return grade
+    return "F"
+
+
+def get_faculty_course_batch(faculty, batch_id, course_id):
+    return CourseBatch.objects.select_related("batch", "batch__branch", "course", "course__department", "faculty").filter(
+        batch_id=batch_id,
+        course_id=course_id,
+        faculty=faculty,
+    ).first()
+
+
+def get_course_batch_student_profiles(course_batch):
+    return list(
+        UserProfile.objects.filter(batch=course_batch.batch, role="student")
+        .select_related("user")
+        .order_by("roll_no", "user__first_name")
+    )
+
+
+def get_student_records_by_roll(profiles):
+    roll_nos = [str(profile.roll_no or "").strip().upper() for profile in profiles if profile.roll_no]
+    return {
+        student.rollno.upper(): student
+        for student in Student.objects.filter(rollno__in=roll_nos)
+    }
+
+
+def get_course_attendance_summary(course, students_by_roll):
+    attendance_map = {}
+    student_ids = [student.rollno for student in students_by_roll.values()]
+    if not student_ids:
+        return attendance_map
+
+    for row in (
+        Attendance.objects.filter(course=course, student_id__in=student_ids)
+        .values("student_id")
+        .annotate(total=Count("id"), present=Count("id", filter=Q(status="Present")))
+    ):
+        total = int(row["total"] or 0)
+        present = int(row["present"] or 0)
+        attendance_map[str(row["student_id"]).strip().upper()] = {
+            "present": present,
+            "total": total,
+            "percentage": round((present * 100.0 / total), 2) if total else 0.0,
+        }
+    return attendance_map
+
+
+def build_course_marks_snapshot(course_batch):
+    profiles = get_course_batch_student_profiles(course_batch)
+    students_by_roll = get_student_records_by_roll(profiles)
+    attendance_map = get_course_attendance_summary(course_batch.course, students_by_roll)
+
+    components = list(
+        CourseAssessmentComponent.objects.filter(batch=course_batch.batch, course=course_batch.course, faculty=course_batch.faculty)
+        .order_by("component_id")
+    )
+    component_ids = [component.component_id for component in components]
+    student_ids = [student.rollno for student in students_by_roll.values()]
+    score_map = {}
+    if component_ids and student_ids:
+        for score in StudentAssessmentScore.objects.filter(component_id__in=component_ids, student_id__in=student_ids):
+            score_map[(score.component_id, score.student_id.upper())] = score.marks_obtained
+
+    enrollments = {
+        enrollment.student_id.upper(): enrollment
+        for enrollment in StudentCourse.objects.filter(
+            student_id__in=student_ids,
+            course=course_batch.course,
+            semester=course_batch.batch.year,
+        )
+    }
+
+    total_max_marks = sum((component.max_marks for component in components), Decimal("0"))
+    students = []
+    complete_scores = True
+    missing_scores_count = 0
+
+    for profile in profiles:
+        roll_no = str(profile.roll_no or "").strip().upper()
+        linked_student = students_by_roll.get(roll_no)
+        attendance = attendance_map.get(
+            roll_no,
+            {
+                "present": 0,
+                "total": 0,
+                "percentage": 0.0,
+            },
+        )
+
+        score_values = {}
+        obtained_total = Decimal("0")
+        filled_components = 0
+        if linked_student:
+            for component in components:
+                raw_score = score_map.get((component.component_id, linked_student.rollno.upper()))
+                if raw_score is not None:
+                    obtained_total += raw_score
+                    filled_components += 1
+                    score_values[str(component.component_id)] = decimal_to_float(raw_score)
+                else:
+                    score_values[str(component.component_id)] = None
+        else:
+            for component in components:
+                score_values[str(component.component_id)] = None
+
+        is_complete = bool(linked_student) and (not components or filled_components == len(components))
+        if linked_student and components and not is_complete:
+            complete_scores = False
+            missing_scores_count += 1
+
+        percentage = (obtained_total * Decimal("100") / total_max_marks) if total_max_marks > 0 and linked_student else None
+        computed_grade = percentage_to_grade(percentage) if percentage is not None and is_complete else "-"
+        stored_enrollment = enrollments.get(roll_no)
+
+        students.append(
+            {
+                "id": profile.user.id,
+                "name": profile.user.first_name or profile.user.username,
+                "roll_no": roll_no,
+                "email": profile.user.email or "-",
+                "can_grade": linked_student is not None,
+                "attendance": attendance,
+                "scores": score_values,
+                "total_score": decimal_to_float(obtained_total) if linked_student else None,
+                "max_score": decimal_to_float(total_max_marks) if linked_student and components else 0.0,
+                "percentage": decimal_to_float(percentage) if percentage is not None else None,
+                "grade": computed_grade if linked_student else "-",
+                "stored_grade": stored_enrollment.grade if stored_enrollment else "-",
+            }
+        )
+
+    latest_submission = (
+        CourseScoresheetSubmission.objects.filter(batch=course_batch.batch, course=course_batch.course, faculty=course_batch.faculty)
+        .order_by("-submitted_at")
+        .first()
+    )
+
+    return {
+        "components": components,
+        "students": students,
+        "profiles": profiles,
+        "students_by_roll": students_by_roll,
+        "total_max_marks": total_max_marks,
+        "all_scores_complete": complete_scores,
+        "missing_scores_count": missing_scores_count,
+        "latest_submission": latest_submission,
+    }
+
+
+def format_marks_label(value):
+    if value is None:
+        return "-"
+
+    decimal_value = value if isinstance(value, Decimal) else Decimal(str(value))
+    normalized = decimal_value.normalize()
+    return format(normalized, "f").rstrip("0").rstrip(".") or "0"
+
+
+def build_scoresheet_message(course_batch, faculty, snapshot):
+    components = snapshot["components"]
+    total_max_marks = snapshot["total_max_marks"]
+    gradeable_students = [student for student in snapshot["students"] if student["can_grade"]]
+    average_score = (
+        sum((Decimal(str(student["total_score"])) for student in gradeable_students), Decimal("0")) / Decimal(len(gradeable_students))
+        if gradeable_students
+        else Decimal("0")
+    )
+    average_percentage = (
+        (average_score * Decimal("100") / total_max_marks)
+        if total_max_marks > 0 and gradeable_students
+        else Decimal("0")
+    )
+
+    lines = [
+        f"Final scoresheet for {course_batch.course.course_id} - {course_batch.course.course_name}",
+        f"Batch: {course_batch.batch.batch_name} | Semester {semester_to_roman(course_batch.batch.year)} | Branch {course_batch.batch.branch.branch_id}",
+        f"Faculty: {faculty.name} ({faculty.email})",
+        f"Components: {', '.join(f'{component.title} [{component.component_type}] {format_marks_label(component.max_marks)}' for component in components)}",
+        f"Class total marks: {format_marks_label(total_max_marks)}",
+        f"Students included: {len(gradeable_students)}",
+        f"Class average: {format_marks_label(average_score)} / {format_marks_label(total_max_marks)} ({format_marks_label(average_percentage)}%)",
+        "",
+        "Roll No | Student | Component Scores | Total | Grade",
+    ]
+
+    for student in gradeable_students:
+        component_parts = []
+        for component in components:
+            score = student["scores"].get(str(component.component_id))
+            component_parts.append(
+                f"{component.title}: {format_marks_label(score)}/{format_marks_label(component.max_marks)}"
+            )
+
+        total_label = f"{format_marks_label(student['total_score'])}/{format_marks_label(total_max_marks)}"
+        lines.append(
+            f"{student['roll_no']} | {student['name']} | {'; '.join(component_parts)} | {total_label} | {student['grade']}"
+        )
+
+    return "\n".join(lines), average_score, average_percentage
 
 
 def parse_semester_value(value):
@@ -2135,6 +2375,370 @@ def save_faculty_attendance_api(request):
 
 @csrf_exempt
 @require_http_methods(["POST", "OPTIONS"])
+def get_faculty_course_marks_api(request):
+    if request.method == "OPTIONS":
+        return cors_response({"detail": "CORS preflight"})
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return cors_response({"success": False, "message": "Invalid JSON payload."}, status=400)
+
+    username = normalize_erp_email(payload.get("username", ""))
+    batch_id = payload.get("batch_id")
+    course_id = str(payload.get("course_id", "")).strip().upper()
+
+    if not username or not batch_id or not course_id:
+        return cors_response({"success": False, "message": "Username, batch, and course are required."}, status=400)
+
+    faculty = Faculty.objects.filter(email__iexact=username).first()
+    if faculty is None:
+        return cors_response({"success": False, "message": "Faculty not found."}, status=404)
+
+    course_batch = get_faculty_course_batch(faculty, batch_id, course_id)
+    if course_batch is None:
+        return cors_response({"success": False, "message": "This course is not assigned to the logged-in faculty."}, status=403)
+
+    snapshot = build_course_marks_snapshot(course_batch)
+    latest_submission = snapshot["latest_submission"]
+
+    return cors_response(
+        {
+            "success": True,
+            "batch": {
+                "id": course_batch.batch.id,
+                "name": course_batch.batch.batch_name,
+                "semester": course_batch.batch.year,
+                "semester_roman": semester_to_roman(course_batch.batch.year),
+                "branch_id": course_batch.batch.branch.branch_id,
+                "branch_name": course_batch.batch.branch.branch_name,
+            },
+            "course": {
+                "id": course_batch.course.course_id,
+                "name": course_batch.course.course_name,
+                "credits": course_batch.course.credits,
+            },
+            "components": [
+                {
+                    "id": component.component_id,
+                    "key": str(component.component_id),
+                    "title": component.title,
+                    "component_type": component.component_type,
+                    "max_marks": decimal_to_float(component.max_marks),
+                }
+                for component in snapshot["components"]
+            ],
+            "students": snapshot["students"],
+            "total_max_marks": decimal_to_float(snapshot["total_max_marks"]),
+            "all_scores_complete": snapshot["all_scores_complete"],
+            "missing_scores_count": snapshot["missing_scores_count"],
+            "latest_submission": (
+                {
+                    "submitted_at": latest_submission.submitted_at.isoformat(timespec="seconds"),
+                    "total_students": latest_submission.total_students,
+                    "total_components": latest_submission.total_components,
+                    "total_max_marks": decimal_to_float(latest_submission.total_max_marks),
+                    "average_score": decimal_to_float(latest_submission.average_score),
+                    "average_percentage": decimal_to_float(latest_submission.average_percentage),
+                    "message_count": latest_submission.message_count,
+                }
+                if latest_submission
+                else None
+            ),
+        }
+    )
+
+
+@csrf_exempt
+@require_http_methods(["POST", "OPTIONS"])
+def save_faculty_course_marks_api(request):
+    if request.method == "OPTIONS":
+        return cors_response({"detail": "CORS preflight"})
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return cors_response({"success": False, "message": "Invalid JSON payload."}, status=400)
+
+    username = normalize_erp_email(payload.get("username", ""))
+    batch_id = payload.get("batch_id")
+    course_id = str(payload.get("course_id", "")).strip().upper()
+    components = payload.get("components")
+    rows = payload.get("rows")
+
+    if not username or not batch_id or not course_id:
+        return cors_response({"success": False, "message": "Username, batch, and course are required."}, status=400)
+
+    if not isinstance(components, list) or len(components) == 0:
+        return cors_response({"success": False, "message": "Add at least one assessment component before saving."}, status=400)
+
+    if not isinstance(rows, list):
+        return cors_response({"success": False, "message": "Student marks payload is required."}, status=400)
+
+    faculty = Faculty.objects.filter(email__iexact=username).first()
+    if faculty is None:
+        return cors_response({"success": False, "message": "Faculty not found."}, status=404)
+
+    course_batch = get_faculty_course_batch(faculty, batch_id, course_id)
+    if course_batch is None:
+        return cors_response({"success": False, "message": "This course is not assigned to the logged-in faculty."}, status=403)
+
+    normalized_components = []
+    seen_titles = set()
+    try:
+        for index, component in enumerate(components, start=1):
+            if not isinstance(component, dict):
+                return cors_response({"success": False, "message": f"Assessment component #{index} is invalid."}, status=400)
+
+            key = str(component.get("key") or component.get("id") or f"component-{index}").strip()
+            title = str(component.get("title", "")).strip()
+            component_type = str(component.get("component_type", "")).strip().lower() or "assignment"
+            max_marks = parse_decimal_value(component.get("max_marks"), default=None)
+
+            if not title:
+                return cors_response({"success": False, "message": f"Assessment component #{index} must have a title."}, status=400)
+            if max_marks is None or max_marks <= 0:
+                return cors_response({"success": False, "message": f"{title} must have max marks greater than 0."}, status=400)
+
+            normalized_title = title.lower()
+            if normalized_title in seen_titles:
+                return cors_response({"success": False, "message": f"Duplicate assessment title: {title}."}, status=400)
+            seen_titles.add(normalized_title)
+
+            normalized_components.append(
+                {
+                    "key": key,
+                    "title": title,
+                    "component_type": component_type,
+                    "max_marks": max_marks,
+                }
+            )
+    except ValueError as error:
+        return cors_response({"success": False, "message": str(error)}, status=400)
+
+    profiles = get_course_batch_student_profiles(course_batch)
+    students_by_roll = get_student_records_by_roll(profiles)
+    allowed_rolls = {str(profile.roll_no or "").strip().upper() for profile in profiles if profile.roll_no}
+    row_map = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        roll_no = str(row.get("roll_no", "")).strip().upper()
+        if roll_no:
+            row_map[roll_no] = row.get("scores") if isinstance(row.get("scores"), dict) else {}
+
+    skipped_students = 0
+    students_with_complete_scores = 0
+    total_max_marks = sum((component["max_marks"] for component in normalized_components), Decimal("0"))
+    validated_scores_by_roll = {}
+
+    for roll_no in allowed_rolls:
+        student = students_by_roll.get(roll_no)
+        if student is None:
+            skipped_students += 1
+            continue
+
+        scores_payload = row_map.get(roll_no, {})
+        obtained_total = Decimal("0")
+        all_component_scores_present = True
+        component_values = {}
+
+        for component in normalized_components:
+            raw_score = scores_payload.get(component["key"])
+            if raw_score is None or str(raw_score).strip() == "":
+                all_component_scores_present = False
+                component_values[component["key"]] = None
+                continue
+
+            try:
+                marks_obtained = parse_decimal_value(raw_score, default=None)
+            except ValueError as error:
+                return cors_response({"success": False, "message": str(error)}, status=400)
+
+            if marks_obtained is None:
+                all_component_scores_present = False
+                component_values[component["key"]] = None
+                continue
+
+            if marks_obtained < 0 or marks_obtained > component["max_marks"]:
+                return cors_response(
+                    {
+                        "success": False,
+                        "message": f"{component['title']} marks for {roll_no} must be between 0 and {format_marks_label(component['max_marks'])}.",
+                    },
+                    status=400,
+                )
+
+            component_values[component["key"]] = marks_obtained
+            obtained_total += marks_obtained
+
+        percentage = (obtained_total * Decimal("100") / total_max_marks) if total_max_marks > 0 else None
+        grade = percentage_to_grade(percentage) if all_component_scores_present and percentage is not None else "-"
+        if all_component_scores_present:
+            students_with_complete_scores += 1
+
+        validated_scores_by_roll[roll_no] = {
+            "component_values": component_values,
+            "grade": grade,
+        }
+
+    with transaction.atomic():
+        CourseAssessmentComponent.objects.filter(batch=course_batch.batch, course=course_batch.course, faculty=faculty).delete()
+
+        created_components = []
+        for component in normalized_components:
+            created_components.append(
+                CourseAssessmentComponent.objects.create(
+                    batch=course_batch.batch,
+                    course=course_batch.course,
+                    faculty=faculty,
+                    title=component["title"],
+                    component_type=component["component_type"],
+                    max_marks=component["max_marks"],
+                )
+            )
+
+        score_records = []
+        for roll_no, validated_row in validated_scores_by_roll.items():
+            student = students_by_roll[roll_no]
+            for component, component_definition in zip(created_components, normalized_components):
+                marks_obtained = validated_row["component_values"].get(component_definition["key"])
+                if marks_obtained is None:
+                    continue
+
+                score_records.append(
+                    StudentAssessmentScore(
+                        component=component,
+                        student=student,
+                        marks_obtained=marks_obtained,
+                    )
+                )
+
+            StudentCourse.objects.update_or_create(
+                student=student,
+                course=course_batch.course,
+                defaults={
+                    "semester": course_batch.batch.year,
+                    "grade": validated_row["grade"],
+                },
+            )
+
+        if score_records:
+            StudentAssessmentScore.objects.bulk_create(score_records)
+
+    return cors_response(
+        {
+            "success": True,
+            "message": "Marks and grades saved successfully.",
+            "components_saved": len(normalized_components),
+            "scores_saved": len(score_records),
+            "students_with_complete_scores": students_with_complete_scores,
+            "skipped_students": skipped_students,
+        }
+    )
+
+
+@csrf_exempt
+@require_http_methods(["POST", "OPTIONS"])
+def submit_faculty_scoresheet_api(request):
+    if request.method == "OPTIONS":
+        return cors_response({"detail": "CORS preflight"})
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return cors_response({"success": False, "message": "Invalid JSON payload."}, status=400)
+
+    username = normalize_erp_email(payload.get("username", ""))
+    batch_id = payload.get("batch_id")
+    course_id = str(payload.get("course_id", "")).strip().upper()
+
+    if not username or not batch_id or not course_id:
+        return cors_response({"success": False, "message": "Username, batch, and course are required."}, status=400)
+
+    faculty = Faculty.objects.filter(email__iexact=username).first()
+    if faculty is None:
+        return cors_response({"success": False, "message": "Faculty not found."}, status=404)
+
+    course_batch = get_faculty_course_batch(faculty, batch_id, course_id)
+    if course_batch is None:
+        return cors_response({"success": False, "message": "This course is not assigned to the logged-in faculty."}, status=403)
+
+    snapshot = build_course_marks_snapshot(course_batch)
+    if not snapshot["components"]:
+        return cors_response({"success": False, "message": "Add and save assessment components before sending the scoresheet."}, status=400)
+
+    gradeable_students = [student for student in snapshot["students"] if student["can_grade"]]
+    if not gradeable_students:
+        return cors_response({"success": False, "message": "No eligible student records were found for this course batch."}, status=400)
+
+    if snapshot["missing_scores_count"] > 0:
+        return cors_response(
+            {
+                "success": False,
+                "message": f"Complete marks for all students before sending the scoresheet. {snapshot['missing_scores_count']} student record(s) are still incomplete.",
+            },
+            status=400,
+        )
+
+    admin_users = User.objects.filter(groups__name__in=["admin", "academic"]).distinct().order_by("first_name", "username")
+    if not admin_users.exists():
+        return cors_response({"success": False, "message": "No academic section recipients were found."}, status=404)
+
+    scoresheet_message, average_score, average_percentage = build_scoresheet_message(course_batch, faculty, snapshot)
+    subject = f"Final Scoresheet - {course_batch.course.course_id} - {course_batch.batch.batch_name}"
+
+    created_messages = 0
+    with transaction.atomic():
+        for admin_user in admin_users:
+            receiver_email = normalize_erp_email(admin_user.email or admin_user.username)
+            if not receiver_email:
+                continue
+
+            AdminApplication.objects.create(
+                subject=subject,
+                sender_type="faculty",
+                sender_name=faculty.name,
+                sender_email=normalize_erp_email(faculty.email),
+                receiver_type="admin",
+                receiver_email=receiver_email,
+                message=scoresheet_message,
+                status="Pending",
+            )
+            created_messages += 1
+
+        submission = CourseScoresheetSubmission.objects.create(
+            batch=course_batch.batch,
+            course=course_batch.course,
+            faculty=faculty,
+            total_students=len(gradeable_students),
+            total_components=len(snapshot["components"]),
+            total_max_marks=snapshot["total_max_marks"],
+            average_score=average_score,
+            average_percentage=average_percentage,
+            message_count=created_messages,
+        )
+
+    return cors_response(
+        {
+            "success": True,
+            "message": f"Final scoresheet sent to academic section ({created_messages} recipient(s)).",
+            "submission": {
+                "submitted_at": submission.submitted_at.isoformat(timespec="seconds"),
+                "total_students": submission.total_students,
+                "total_components": submission.total_components,
+                "total_max_marks": decimal_to_float(submission.total_max_marks),
+                "average_score": decimal_to_float(submission.average_score),
+                "average_percentage": decimal_to_float(submission.average_percentage),
+                "message_count": submission.message_count,
+            },
+        },
+        status=201,
+    )
+
+
+@csrf_exempt
+@require_http_methods(["POST", "OPTIONS"])
 def get_student_results_api(request):
     if request.method == "OPTIONS":
         return cors_response({"detail": "CORS preflight"})
@@ -2282,6 +2886,9 @@ def raise_missed_class_attendance_query_api(request):
     if student_record is None:
         return cors_response({"success": False, "message": "Student record not found."}, status=404)
 
+    if profile.batch_id is None:
+        return cors_response({"success": False, "message": "Student batch is not assigned."}, status=400)
+
     # Query can only be raised if the selected date is actually marked absent.
     was_absent = Attendance.objects.filter(
         student=student_record,
@@ -2294,6 +2901,19 @@ def raise_missed_class_attendance_query_api(request):
 
     reason_text = reason if reason else "Attendance correction request"
     query_type = f"ATTQ|{course_id}|{missed_date.isoformat()}"
+    course_batch = (
+        CourseBatch.objects.select_related("faculty")
+        .filter(batch_id=profile.batch_id, course_id=course_id)
+        .first()
+    )
+    if course_batch is None or course_batch.faculty is None:
+        return cors_response(
+            {
+                "success": False,
+                "message": "The concerned faculty is not assigned for this course yet, so the attendance query cannot be sent.",
+            },
+            status=400,
+        )
 
     duplicate_exists = Application.objects.filter(
         student=student_record,
@@ -2307,12 +2927,13 @@ def raise_missed_class_attendance_query_api(request):
         student=student_record,
         type=query_type,
         status="Pending",
+        description=reason_text,
     )
 
     return cors_response(
         {
             "success": True,
-            "message": "Attendance query raised successfully.",
+            "message": f"Attendance query sent to {course_batch.faculty.name}.",
             "query": {
                 "application_id": application.application_id,
                 "course_id": course_id,
@@ -2320,6 +2941,8 @@ def raise_missed_class_attendance_query_api(request):
                 "status": application.status,
                 "reason": reason_text,
                 "reference": query_type,
+                "receiver_name": course_batch.faculty.name,
+                "receiver_email": normalize_erp_email(course_batch.faculty.email),
             },
         },
         status=201,

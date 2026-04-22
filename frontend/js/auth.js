@@ -12,53 +12,33 @@ function logout() {
 (function guardProtectedPages() {
   const currentPath = window.location.pathname;
   const user = JSON.parse(localStorage.getItem("erp_user") || "null");
+  const studentPages = [
+    "/student.html",
+    "/student-timetable.html",
+    "/student-courses.html",
+    "/student-attendance.html",
+    "/student-results.html",
+    "/student-applications.html",
+  ];
+  const facultyPages = [
+    "/faculty.html",
+    "/faculty-courses.html",
+    "/faculty-course-detail.html",
+    "/faculty-timetable.html",
+    "/faculty-applications.html",
+  ];
 
   if (!user) {
     window.location.href = getLoginPath();
     return;
   }
 
-  if (currentPath.endsWith("/student.html") && user.role !== "student") {
+  if (studentPages.some((page) => currentPath.endsWith(page)) && user.role !== "student") {
     window.location.href = getLoginPath();
     return;
   }
 
-  if (currentPath.endsWith("/faculty.html") && user.role !== "faculty") {
-    window.location.href = getLoginPath();
-    return;
-  }
-
-  if (currentPath.endsWith("/faculty-courses.html") && user.role !== "faculty") {
-    window.location.href = getLoginPath();
-    return;
-  }
-
-  if (currentPath.endsWith("/faculty-course-detail.html") && user.role !== "faculty") {
-    window.location.href = getLoginPath();
-    return;
-  }
-
-  if (currentPath.endsWith("/faculty-timetable.html") && user.role !== "faculty") {
-    window.location.href = getLoginPath();
-    return;
-  }
-
-  if (currentPath.endsWith("/student-timetable.html") && user.role !== "student") {
-    window.location.href = getLoginPath();
-    return;
-  }
-
-  if (currentPath.endsWith("/student-courses.html") && user.role !== "student") {
-    window.location.href = getLoginPath();
-    return;
-  }
-
-  if (currentPath.endsWith("/student-attendance.html") && user.role !== "student") {
-    window.location.href = getLoginPath();
-    return;
-  }
-
-  if (currentPath.endsWith("/student-results.html") && user.role !== "student") {
+  if (facultyPages.some((page) => currentPath.endsWith(page)) && user.role !== "faculty") {
     window.location.href = getLoginPath();
     return;
   }

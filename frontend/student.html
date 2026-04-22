@@ -12,7 +12,7 @@
     <a href="student-courses.html">My Courses</a>
     <a href="student-attendance.html">Attendance</a>
     <a href="student-results.html">Results</a>
-    <a href="#">Announcements</a>
+    <a href="student-applications.html">Applications</a>
     <a href="student-timetable.html">View Timetable</a>
   </div>
 
@@ -50,8 +50,25 @@
     <br>
 
     <div class="card">
-      <h3>Latest Announcement</h3>
-      <p>Campus Fest This Friday!</p>
+      <h3>Change Password</h3>
+      <form id="studentPasswordForm" class="admin-user-form" novalidate>
+        <div class="admin-user-grid">
+          <div>
+            <label for="studentOldPassword">Current Password</label>
+            <input id="studentOldPassword" type="password" required>
+          </div>
+          <div>
+            <label for="studentNewPassword">New Password</label>
+            <input id="studentNewPassword" type="password" minlength="8" required>
+          </div>
+          <div>
+            <label for="studentConfirmNewPassword">Confirm New Password</label>
+            <input id="studentConfirmNewPassword" type="password" minlength="8" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Update Password</button>
+        <p id="studentPasswordMessage" class="admin-user-message" role="status" aria-live="polite"></p>
+      </form>
     </div>
   </div>
 </div>

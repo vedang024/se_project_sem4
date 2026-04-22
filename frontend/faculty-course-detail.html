@@ -11,6 +11,7 @@
     <h2>FACULTY</h2>
     <a href="faculty.html">Dashboard</a>
     <a href="faculty-courses.html" class="active">My Courses</a>
+    <a href="faculty-applications.html">Applications</a>
     <a href="faculty-timetable.html">View Timetable</a>
   </div>
 
@@ -75,6 +76,59 @@
           <tbody id="courseStudentsTableBody">
             <tr>
               <td colspan="4">Loading students...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <br>
+
+    <div class="card">
+      <div class="section-header">
+        <h3>Assessment Marks</h3>
+        <div class="course-actions-row">
+          <button id="addAssessmentComponentBtn" class="btn btn-secondary" type="button">Add Component</button>
+          <button id="saveCourseMarksBtn" class="btn btn-primary" type="button">Save Marks and Grades</button>
+          <button id="sendScoresheetBtn" class="btn btn-secondary" type="button">Send Final Scoresheet</button>
+        </div>
+      </div>
+
+      <p id="marksMeta" class="manage-note">Define assessment components, enter marks for each student, and send the final scoresheet to the academic section when everything is complete.</p>
+
+      <div class="attendance-summary" id="marksSummary">
+        <div class="summary-item">
+          <span class="summary-label">Components</span>
+          <strong id="marksComponentCount">0</strong>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Total Marks</span>
+          <strong id="marksTotalMax">0</strong>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Last Scoresheet</span>
+          <strong id="lastScoresheetAt">Not Sent</strong>
+        </div>
+      </div>
+
+      <p id="courseMarksMessage" class="admin-user-message" role="status" aria-live="polite"></p>
+
+      <div id="assessmentComponentsList" class="assessment-components-list" style="margin-top: 12px;"></div>
+
+      <div class="table-wrapper" style="margin-top: 12px;">
+        <table class="manage-users-table marks-table">
+          <thead id="courseMarksTableHead">
+            <tr>
+              <th>Roll No</th>
+              <th>Student</th>
+              <th>Attendance %</th>
+              <th>Total</th>
+              <th>Grade</th>
+            </tr>
+          </thead>
+          <tbody id="courseMarksTableBody">
+            <tr>
+              <td colspan="5">Loading marks...</td>
             </tr>
           </tbody>
         </table>
