@@ -111,7 +111,7 @@ attendanceTableBody.addEventListener("click", (event) => {
           return;
         }
 
-        raiseButton.textContent = "Query Raised";
+        raiseButton.textContent = "Query Sent";
       })
       .catch(() => {
         raiseButton.disabled = false;

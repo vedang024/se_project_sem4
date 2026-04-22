@@ -169,9 +169,9 @@ function renderRecipientList(roleKey) {
     const checkmark = document.createElement("span");
     checkmark.className = "checkmark";
 
-    label.appendChild(details);
     label.appendChild(checkbox);
     label.appendChild(checkmark);
+    label.appendChild(details);
     item.appendChild(label);
     container.appendChild(item);
   });
@@ -287,7 +287,7 @@ function canManageCurrentApplication() {
     return (
       currentView === "inbox" &&
       String(currentApplication.status || "").toLowerCase() === "pending" &&
-      (user.role === "admin" || user.role === "faculty")
+      user.role === "faculty"
     );
   }
 

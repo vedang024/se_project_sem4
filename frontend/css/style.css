@@ -1297,10 +1297,12 @@ body {
 /* Custom Checkbox */
 .checkbox-container {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  gap: 0.75rem;
   cursor: pointer;
   font-size: 0.85rem;
   user-select: none;
+  width: 100%;
 }
 
 .checkbox-container input {
@@ -1317,11 +1319,12 @@ body {
   background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: 4px;
-  margin-right: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  flex-shrink: 0;
+  margin-top: 0.2rem;
 }
 
 .checkbox-container:hover input ~ .checkmark {
@@ -1420,18 +1423,26 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
 .recipient-name {
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--fg);
+  line-height: 1.35;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .recipient-meta {
   font-size: 0.75rem;
   color: var(--muted);
   font-family: 'JetBrains Mono', monospace;
+  line-height: 1.45;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .select-all-row {
@@ -1442,7 +1453,7 @@ body {
 /* Side-by-Side Recipients Grid */
 .recipients-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1rem;
   margin-bottom: 1rem;
 }
@@ -1466,6 +1477,7 @@ body {
   background: linear-gradient(180deg, rgba(10, 15, 26, 0.75), rgba(17, 24, 39, 0.88));
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .column-header {
@@ -1494,7 +1506,7 @@ body {
 }
 
 .recipient-list {
-  max-height: 250px;
+  max-height: 320px;
   overflow-y: auto;
   flex-grow: 1;
 }
@@ -1649,6 +1661,63 @@ body {
   margin-top: 1rem;
 }
 
+.assessment-components-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.assessment-component-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.3fr) minmax(140px, 0.9fr) minmax(120px, 0.7fr) auto;
+  gap: 0.85rem;
+  align-items: end;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.assessment-component-actions {
+  display: flex;
+  align-items: end;
+  min-height: 100%;
+}
+
+.assessment-empty-state {
+  padding: 1rem 1.1rem;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.marks-table td {
+  vertical-align: top;
+}
+
+.marks-input {
+  width: 100%;
+  min-width: 90px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.7rem;
+  color: var(--fg);
+}
+
+.marks-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.table-subtext {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 .application-empty-state {
   padding: 2rem 1.25rem;
   text-align: center;
@@ -1690,6 +1759,15 @@ body {
   }
 
   .application-form-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .assessment-component-row {
+    grid-template-columns: 1fr;
+  }
+
+  .assessment-component-actions .btn {
     width: 100%;
     justify-content: center;
   }
