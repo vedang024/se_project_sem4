@@ -99,6 +99,9 @@ function setRoleMetaVisibility() {
   const isStudent = role === "student";
   const isFaculty = role === "faculty";
 
+  if (document.getElementById("roleMetaFields")) {
+    document.getElementById("roleMetaFields").style.display = isStudent || isFaculty ? "grid" : "none";
+  }
   if (rollNoFieldWrap) rollNoFieldWrap.style.display = isStudent ? "block" : "none";
   if (branchSelect?.parentElement) branchSelect.parentElement.style.display = isStudent ? "block" : "none";
   if (batchSelect?.parentElement) batchSelect.parentElement.style.display = isStudent ? "block" : "none";
