@@ -59,6 +59,16 @@ let managedUsers = [];
 let allBatches = [];
 let selectedUserTypeFilter = "all";
 
+function updateSelectPlaceholderState(selectElement) {
+  if (!selectElement) return;
+  selectElement.classList.toggle("select-placeholder", !String(selectElement.value || "").trim());
+}
+
+function updateAllRoleMetaSelectStates() {
+  [departmentSelect, branchSelect, batchSelect, editDepartmentSelect, editBranchSelect, editBatchSelect]
+    .forEach(updateSelectPlaceholderState);
+}
+
 function getAdminSession() {
   const user = JSON.parse(localStorage.getItem("erp_user") || "null");
   if (!user || user.role !== "admin") {
@@ -104,6 +114,9 @@ function setRoleMetaVisibility() {
   const isStudent = role === "student";
   const isFaculty = role === "faculty";
 
+  if (document.getElementById("roleMetaFields")) {
+    document.getElementById("roleMetaFields").style.display = isStudent || isFaculty ? "grid" : "none";
+  }
   if (rollNoFieldWrap) rollNoFieldWrap.style.display = isStudent ? "block" : "none";
   if (branchSelect?.parentElement) branchSelect.parentElement.style.display = isStudent ? "block" : "none";
   if (batchSelect?.parentElement) batchSelect.parentElement.style.display = isStudent ? "block" : "none";
@@ -113,6 +126,8 @@ function setRoleMetaVisibility() {
     newRollNo.value = "";
     batchSelect.value = "";
   }
+
+  updateAllRoleMetaSelectStates();
 }
 
 function setEditRoleMetaVisibility() {
@@ -128,6 +143,8 @@ function setEditRoleMetaVisibility() {
   if (isStudent) {
     editUsernameInput.value = String(editEmailInput.value || "").trim().toLowerCase();
   }
+
+  updateAllRoleMetaSelectStates();
 }
 
 function populateDepartmentOptions() {
@@ -145,12 +162,18 @@ function populateDepartmentOptions() {
     editOption.textContent = dept.name;
     editDepartmentSelect.appendChild(editOption);
   });
+
+  updateSelectPlaceholderState(departmentSelect);
+  updateSelectPlaceholderState(editDepartmentSelect);
 }
 
 function populateBranchOptions(targetDepartmentSelect, targetBranchSelect) {
   targetBranchSelect.innerHTML = '<option value="">Select branch</option>';
   const selectedDept = departmentsData.find((dept) => String(dept.id) === targetDepartmentSelect.value);
-  if (!selectedDept) return;
+  if (!selectedDept) {
+    updateSelectPlaceholderState(targetBranchSelect);
+    return;
+  }
 
   (selectedDept.branches || []).forEach((branch) => {
     const option = document.createElement("option");
@@ -158,12 +181,17 @@ function populateBranchOptions(targetDepartmentSelect, targetBranchSelect) {
     option.textContent = branch.name;
     targetBranchSelect.appendChild(option);
   });
+
+  updateSelectPlaceholderState(targetBranchSelect);
 }
 
 function populateBatchOptions(targetBranchSelect, targetBatchSelect) {
   targetBatchSelect.innerHTML = '<option value="">Select batch</option>';
   const selectedBranchId = String(targetBranchSelect.value || "");
-  if (!selectedBranchId) return;
+  if (!selectedBranchId) {
+    updateSelectPlaceholderState(targetBatchSelect);
+    return;
+  }
 
   allBatches
     .filter((batch) => String(batch.branch_id || "") === selectedBranchId)
@@ -173,6 +201,8 @@ function populateBatchOptions(targetBranchSelect, targetBatchSelect) {
       option.textContent = batch.batch_name || batch.label || `Batch ${batch.id}`;
       targetBatchSelect.appendChild(option);
     });
+
+  updateSelectPlaceholderState(targetBatchSelect);
 }
 
 async function loadDepartmentsBranches() {
@@ -429,6 +459,7 @@ function openEditUserModal(userId) {
   editBranchSelect.value = user.branch_id ? String(user.branch_id) : "";
   populateBatchOptions(editBranchSelect, editBatchSelect);
   editBatchSelect.value = user.batch_id ? String(user.batch_id) : "";
+  updateAllRoleMetaSelectStates();
 
   editFacultyDesignationInput.value = user.faculty_designation || "";
   editFacultyHonorInput.value = user.faculty_honor || "";
@@ -621,12 +652,18 @@ departmentSelect.addEventListener("change", () => {
   populateBatchOptions(branchSelect, batchSelect);
 });
 branchSelect.addEventListener("change", () => populateBatchOptions(branchSelect, batchSelect));
+departmentSelect.addEventListener("change", () => updateSelectPlaceholderState(departmentSelect));
+branchSelect.addEventListener("change", () => updateSelectPlaceholderState(branchSelect));
+batchSelect.addEventListener("change", () => updateSelectPlaceholderState(batchSelect));
 
 editDepartmentSelect.addEventListener("change", () => {
   populateBranchOptions(editDepartmentSelect, editBranchSelect);
   populateBatchOptions(editBranchSelect, editBatchSelect);
 });
 editBranchSelect.addEventListener("change", () => populateBatchOptions(editBranchSelect, editBatchSelect));
+editDepartmentSelect.addEventListener("change", () => updateSelectPlaceholderState(editDepartmentSelect));
+editBranchSelect.addEventListener("change", () => updateSelectPlaceholderState(editBranchSelect));
+editBatchSelect.addEventListener("change", () => updateSelectPlaceholderState(editBatchSelect));
 editRoleSelect.addEventListener("change", setEditRoleMetaVisibility);
 editEmailInput.addEventListener("input", () => {
   if (editRoleSelect.value === "student") {
@@ -664,6 +701,7 @@ userSearchInput.addEventListener("input", applyUserFilters);
 
 (async function init() {
   setRoleMetaVisibility();
+  updateAllRoleMetaSelectStates();
   updateFilterButtons();
   try {
     await loadDepartmentsBranches();

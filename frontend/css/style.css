@@ -1039,7 +1039,8 @@ body {
 }
 
 .role-meta {
-  display: none;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
 }
 
 .admin-user-form label {
@@ -1060,6 +1061,10 @@ body {
   font-size: 0.9rem;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-user-form select.select-placeholder {
+  color: var(--muted);
 }
 
 .admin-user-form input:focus,
