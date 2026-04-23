@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 # Create your models here.
 class Student(models.Model):
@@ -37,6 +38,7 @@ class Application(models.Model):
     status = models.CharField(max_length=20)
     description = models.TextField(blank=True, default="")
     submitted_date = models.DateField(auto_now_add=True)
+    submitted_at = models.DateTimeField(default=timezone.now)
 
 
 class AdminApplication(models.Model):

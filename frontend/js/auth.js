@@ -23,6 +23,7 @@ function logout() {
   const facultyPages = [
     "/faculty.html",
     "/faculty-courses.html",
+    "/faculty-profile.html",
     "/faculty-course-detail.html",
     "/faculty-timetable.html",
     "/faculty-applications.html",
@@ -39,6 +40,26 @@ function logout() {
   }
 
   if (facultyPages.some((page) => currentPath.endsWith(page)) && user.role !== "faculty") {
+    window.location.href = getLoginPath();
+    return;
+  }
+
+  if (currentPath.endsWith("/student-timetable.html") && user.role !== "student") {
+    window.location.href = getLoginPath();
+    return;
+  }
+
+  if (currentPath.endsWith("/student-courses.html") && user.role !== "student") {
+    window.location.href = getLoginPath();
+    return;
+  }
+
+  if (currentPath.endsWith("/student-attendance.html") && user.role !== "student") {
+    window.location.href = getLoginPath();
+    return;
+  }
+
+  if (currentPath.endsWith("/student-results.html") && user.role !== "student") {
     window.location.href = getLoginPath();
     return;
   }

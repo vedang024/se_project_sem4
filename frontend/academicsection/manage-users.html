@@ -129,40 +129,48 @@
 
     <div class="card manage-toolbar">
       <div class="manage-filter-row">
-        <div>
-          <label for="roleFilter">Role Filter</label>
-          <select id="roleFilter">
-            <option value="">All</option>
-            <option value="student">Students</option>
-            <option value="faculty">Faculty</option>
-          </select>
+        <div class="filter-group">
+          <label class="filter-label">User Type</label>
+          <div class="filter-buttons">
+            <button id="filterAllBtn" class="btn btn-secondary btn-sm" type="button">All</button>
+            <button id="filterStudentBtn" class="btn btn-secondary btn-sm" type="button">Students</button>
+            <button id="filterFacultyBtn" class="btn btn-secondary btn-sm" type="button">Faculty</button>
+          </div>
         </div>
-        <button class="btn btn-primary" id="refreshUsersBtn" type="button">Refresh</button>
+        <div class="search-group">
+          <label for="userSearchInput" style="color: white;" class="filter-label">Search Users</label>
+          <input id="userSearchInput" type="text" placeholder="Search " class="search-input">
+        </div>
+        <div class="action-group">
+          <button class="btn btn-primary" id="refreshUsersBtn" type="button">Refresh</button>
+        </div>
       </div>
       <p id="manageUsersMessage" class="admin-user-message" role="status" aria-live="polite"></p>
     </div>
 
     <div class="card manage-users-table-card">
-      <div class="table-wrapper">
-        <table class="manage-users-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Roll No</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Department</th>
-              <th>Branch</th>
-              <th>Batch</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="manageUsersBody">
-            <tr>
-              <td colspan="8">Loading users...</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="table-container">
+        <div class="table-wrapper">
+          <table class="manage-users-table">
+            <thead class="table-header">
+              <tr id="manageUsersHeaderRow">
+                <th class="col-name">Name</th>
+                <th class="col-roll">Roll No</th>
+                <th class="col-email">Email</th>
+                <th class="col-role">Role</th>
+                <th class="col-dept">Department</th>
+                <th class="col-branch">Branch</th>
+                <th class="col-batch">Batch</th>
+                <th class="col-action">Action</th>
+              </tr>
+            </thead>
+            <tbody id="manageUsersBody" class="table-body">
+              <tr class="loading-row">
+                <td colspan="8" class="loading-cell">Loading users...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>

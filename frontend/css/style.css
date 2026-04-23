@@ -334,10 +334,37 @@ body {
   background: rgba(16, 185, 129, 0.25);
 }
 
+.calendar{
+  display: flex;
+  gap:8px;
+  align-items: center;
+}
+ #classDate{
+  width:150px;
+ }
+
+#batchSelect{
+  width:570px;
+}
+
 .cell-content {
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+#createUserButton{
+  width: 170px;
+  height: 38px;
+  justify-content: center;
+}
+
+#addDeptBtn{
+  position: absolute;
+  right: 64px;
+  border: none;
+  width:200px;
+  justify-content: center;
 }
 
 .subject {
@@ -498,23 +525,55 @@ body {
   background: rgba(255,255,255,0.05);
 }
 
-/* Scrollbar */
-.table-wrapper::-webkit-scrollbar {
+/* Table container and wrapper for better layout */
+.table-container {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.manage-users-table-card .table-wrapper {
+  overflow-x: auto;
+  overflow-y: visible;
+  max-height: 70vh;
+  border-radius: 12px;
+}
+
+.manage-users-table-card .table-wrapper::-webkit-scrollbar {
   height: 8px;
   width: 8px;
 }
 
-.table-wrapper::-webkit-scrollbar-track {
-  background: var(--bg);
+.manage-users-table-card .table-wrapper::-webkit-scrollbar-track {
+  background: var(--bg-elevated);
 }
 
-.table-wrapper::-webkit-scrollbar-thumb {
+.manage-users-table-card .table-wrapper::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 4px;
 }
 
-.table-wrapper::-webkit-scrollbar-thumb:hover {
+.manage-users-table-card .table-wrapper::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
+}
+
+.table-header {
+  background: var(--bg-elevated);
+}
+
+.table-body {
+  background: var(--card);
+}
+
+.loading-row {
+  background: var(--card);
+}
+
+.loading-cell {
+  text-align: center;
+  color: var(--muted);
+  font-style: italic;
+  padding: 2rem;
 }
 
 /* Animations */
@@ -673,6 +732,25 @@ body {
   font-size: 0.75rem;
   width: 100%;
   justify-content: center;
+}
+
+/* Action buttons in table */
+.manage-users-table .btn {
+  min-width: 70px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  border-radius: 6px;
+}
+
+.manage-users-table .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.manage-users-table .btn:active {
+  transform: translateY(0);
 }
 
 /* Add New Department Card */
@@ -990,6 +1068,23 @@ body {
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
 }
 
+input[type="date"] {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
+  color: var(--fg);
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input[type="date"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
 .admin-user-message {
   min-height: 1.2rem;
   font-size: 0.9rem;
@@ -1005,6 +1100,21 @@ body {
 
 .manage-toolbar {
   margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.manage-users-table-card {
+  padding: 0;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+/* Page-specific spacing adjustments */
+.main > .card:first-of-type {
+  margin-bottom: 2rem;
 }
 
 .manage-note {
@@ -1173,10 +1283,73 @@ body {
 }
 
 .manage-filter-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  gap: 1.5rem;
+  align-items: stretch;
+  margin-bottom: 1rem;
+}
+
+.filter-group,
+.search-group,
+.action-group {
   display: flex;
-  gap: 1rem;
-  align-items: end;
-  margin-bottom: 0.8rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  height: 100%;
+}
+
+.search-group {
+  justify-content: center;
+}
+
+.search-group .filter-label {
+  text-align: center;
+}
+
+.action-group {
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+
+.search-group input{
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.filter-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--fg);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.search-input:focus {
+  border-color: var(--accent);
+}
+
+.search-input::placeholder {
+  color: var(--muted);
 }
 
 .manage-filter-row label {
@@ -1198,24 +1371,55 @@ body {
 .manage-users-table {
   width: 100%;
   border-collapse: collapse;
+  margin-bottom: 1rem;
 }
 
 .manage-users-table th,
 .manage-users-table td {
   border-bottom: 1px solid var(--border);
-  padding: 0.8rem 0.7rem;
+  padding: 1rem 0.9rem;
   text-align: left;
+  vertical-align: middle;
 }
 
 .manage-users-table th {
   color: var(--muted);
   font-size: 0.8rem;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  background: var(--bg-elevated);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .manage-users-table td {
   font-size: 0.92rem;
+  transition: background-color 0.15s ease;
+}
+
+/* Column-specific styling */
+.col-name { min-width: 150px; }
+.col-roll { min-width: 100px; }
+.col-email { min-width: 200px; }
+.col-role { min-width: 80px; }
+.col-dept { min-width: 120px; }
+.col-branch { min-width: 100px; }
+.col-batch { min-width: 100px; }
+.col-action { min-width: 100px; text-align: center; }
+
+.manage-users-table tbody tr {
+  transition: all 0.15s ease;
+}
+
+.manage-users-table tbody tr:hover {
+  background: rgba(16, 185, 129, 0.03);
+  transform: scale(1.001);
+}
+
+.manage-users-table tbody tr:hover td {
+  background: rgba(16, 185, 129, 0.03);
 }
 
 @media (max-width: 768px) {
@@ -1232,14 +1436,39 @@ body {
   }
 
   .manage-filter-row {
-    flex-direction: column;
-    align-items: stretch;
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
-  .manage-filter-row select {
-    min-width: 0;
-    width: 100%;
+  .filter-buttons {
+    flex-direction: column;
   }
+
+  .filter-buttons .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .manage-users-table th,
+  .manage-users-table td {
+    padding: 0.75rem 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .manage-users-table th {
+    font-size: 0.75rem;
+  }
+
+  .manage-users-table-card .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-height: none;
+  }
+
+  /* Adjust column minimums for mobile */
+  .col-name { min-width: 120px; }
+  .col-email { min-width: 180px; }
+  .col-dept { min-width: 100px; }
 
   .departments-admin-page .cards .card {
     min-height: 0;
@@ -1497,12 +1726,17 @@ body {
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--muted);
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
 }
 
 .select-all-mini .checkmark {
   width: 14px;
   height: 14px;
-  margin-right: 6px;
+  margin-right: 0;
+  margin-top: 0;
 }
 
 .recipient-list {
@@ -1522,6 +1756,25 @@ body {
   font-size: 0.85rem;
   outline: none;
 }
+#viewBatchSelect {
+  padding: 1cqb;
+  background-color: var(--bg-elevated);
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--fg);
+  font-size: 0.85rem;
+  outline: none;
+  margin-left: 10px;
+}
+#viewBatchSelect option{
+  background-color: var(--bg);
+  color: var(--fg);
+}
+#batchSelect{
+  width: 562px;
+}
+
 
 .search-input:focus {
   background: rgba(255, 255, 255, 0.01);

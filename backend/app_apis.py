@@ -226,7 +226,8 @@ def serialize_student_query(application, profile=None, full_message=False):
         subject = "Student Application"
         message = str(getattr(application, "description", "") or "").strip() or f"Student application reference: {application.type}"
 
-    created_at = f"{application.submitted_date.isoformat()}T00:00:00"
+    submitted_at = getattr(application, "submitted_at", None)
+    created_at = to_iso_string(submitted_at) if submitted_at else f"{application.submitted_date.isoformat()}T00:00:00"
     receiver_info = get_student_query_receiver(application, profile=profile)
 
     return {

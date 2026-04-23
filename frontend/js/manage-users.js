@@ -1,9 +1,13 @@
 const API_BASE_URL = "http://127.0.0.1:8000";
 
-const roleFilter = document.getElementById("roleFilter");
 const refreshUsersBtn = document.getElementById("refreshUsersBtn");
 const manageUsersBody = document.getElementById("manageUsersBody");
 const manageUsersMessage = document.getElementById("manageUsersMessage");
+const manageUsersHeaderRow = document.getElementById("manageUsersHeaderRow");
+const filterAllBtn = document.getElementById("filterAllBtn");
+const filterStudentBtn = document.getElementById("filterStudentBtn");
+const filterFacultyBtn = document.getElementById("filterFacultyBtn");
+const userSearchInput = document.getElementById("userSearchInput");
 const createUserForm = document.getElementById("createUserForm");
 const createUserButton = document.getElementById("createUserButton");
 const createUserMessage = document.getElementById("createUserMessage");
@@ -53,6 +57,7 @@ const editFacultyAddressInput = document.getElementById("editFacultyAddressInput
 let departmentsData = [];
 let managedUsers = [];
 let allBatches = [];
+let selectedUserTypeFilter = "all";
 
 function getAdminSession() {
   const user = JSON.parse(localStorage.getItem("erp_user") || "null");
@@ -283,12 +288,58 @@ function openUserDetailPage(userId) {
 }
 
 function renderRows(users) {
+  const facultyOnlyView = selectedUserTypeFilter === "faculty";
+
+  if (manageUsersHeaderRow) {
+    manageUsersHeaderRow.innerHTML = facultyOnlyView
+      ? `
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Department</th>
+        <th>Branch</th>
+        <th>Batch</th>
+        <th>Action</th>
+      `
+      : `
+        <th>Name</th>
+        <th>Roll No</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Department</th>
+        <th>Branch</th>
+        <th>Batch</th>
+        <th>Action</th>
+      `;
+  }
+
   if (!users.length) {
     manageUsersBody.innerHTML = `
       <tr>
-        <td colspan="8">No users found for selected filter.</td>
+        <td colspan="${facultyOnlyView ? 7 : 8}">No users found for selected filter/search.</td>
       </tr>
     `;
+    return;
+  }
+
+  if (facultyOnlyView) {
+    manageUsersBody.innerHTML = users
+      .map(
+        (user) => `
+    <tr onclick="openUserDetailPage(${user.id})" style="cursor:pointer;">
+      <td>${user.full_name || "-"}</td>
+      <td>${user.email || user.username || "-"}</td>
+      <td>${user.role}</td>
+      <td>${user.department || "-"}</td>
+      <td>${user.branch || "-"}</td>
+      <td>${user.batch || "-"}</td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); openUserDetailPage(${user.id})">Open</button>
+      </td>
+    </tr>
+  `,
+      )
+      .join("");
     return;
   }
 
@@ -297,12 +348,12 @@ function renderRows(users) {
       (user) => `
     <tr onclick="openUserDetailPage(${user.id})" style="cursor:pointer;">
       <td>${user.full_name || "-"}</td>
-      <td>${user.role === "faculty" ? "N/A" : (user.roll_no || "-")}</td>
+      <td>${user.role === "faculty" ? "-" : (user.roll_no || "-")}</td>
       <td>${user.email || user.username || "-"}</td>
       <td>${user.role}</td>
       <td>${user.department || "-"}</td>
-      <td>${user.role === "faculty" ? "N/A" : (user.branch || "-")}</td>
-      <td>${user.role === "faculty" ? "N/A" : (user.batch || "-")}</td>
+      <td>${user.role === "faculty" ? "-" : (user.branch || "-")}</td>
+      <td>${user.role === "faculty" ? "-" : (user.batch || "-")}</td>
       <td>
         <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); openUserDetailPage(${user.id})">Open</button>
       </td>
@@ -310,6 +361,53 @@ function renderRows(users) {
   `,
     )
     .join("");
+}
+
+function getFilteredUsers() {
+  const search = String(userSearchInput?.value || "").trim().toLowerCase();
+
+  return managedUsers.filter((user) => {
+    const role = String(user.role || "").toLowerCase();
+    const typeMatches =
+      selectedUserTypeFilter === "all" ||
+      (selectedUserTypeFilter === "student" && role === "student") ||
+      (selectedUserTypeFilter === "faculty" && role === "faculty");
+
+    if (!typeMatches) return false;
+    if (!search) return true;
+
+    const searchableFields = [
+      user.full_name,
+      user.roll_no,
+      user.email,
+      user.username,
+      user.role,
+      user.department,
+      user.branch,
+      user.batch,
+    ];
+
+    return searchableFields.some((value) => String(value || "").toLowerCase().includes(search));
+  });
+}
+
+function updateFilterButtons() {
+  const allActive = selectedUserTypeFilter === "all";
+  const studentActive = selectedUserTypeFilter === "student";
+  const facultyActive = selectedUserTypeFilter === "faculty";
+
+  filterAllBtn.classList.toggle("btn-primary", allActive);
+  filterAllBtn.classList.toggle("btn-secondary", !allActive);
+
+  filterStudentBtn.classList.toggle("btn-primary", studentActive);
+  filterStudentBtn.classList.toggle("btn-secondary", !studentActive);
+
+  filterFacultyBtn.classList.toggle("btn-primary", facultyActive);
+  filterFacultyBtn.classList.toggle("btn-secondary", !facultyActive);
+}
+
+function applyUserFilters() {
+  renderRows(getFilteredUsers());
 }
 
 function openEditUserModal(userId) {
@@ -451,7 +549,10 @@ async function loadUsers() {
     manageUsersBody.innerHTML = '<tr><td colspan="8">Admin login required.</td></tr>';
     setManageMessage("Admin login required to manage users.", "error");
     refreshUsersBtn.disabled = true;
-    roleFilter.disabled = true;
+    filterAllBtn.disabled = true;
+    filterStudentBtn.disabled = true;
+    filterFacultyBtn.disabled = true;
+    userSearchInput.disabled = true;
     return;
   }
 
@@ -462,7 +563,7 @@ async function loadUsers() {
     const response = await fetch(`${API_BASE_URL}/api/admin/manage-users/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(masterPayload({ role: roleFilter.value })),
+      body: JSON.stringify(masterPayload({ role: "" })),
     });
 
     const data = await response.json();
@@ -473,7 +574,7 @@ async function loadUsers() {
     }
 
     managedUsers = Array.isArray(data.users) ? data.users : [];
-    renderRows(managedUsers);
+    applyUserFilters();
     setManageMessage("User list updated.", "success");
   } catch (error) {
     setManageMessage("Cannot connect to backend. Make sure Django server is running.", "error");
@@ -512,7 +613,6 @@ window.deleteManagedUser = deleteManagedUser;
 window.openEditUserModal = openEditUserModal;
 window.openUserDetailPage = openUserDetailPage;
 
-roleFilter.addEventListener("change", loadUsers);
 refreshUsersBtn.addEventListener("click", loadUsers);
 createUserForm.addEventListener("submit", createUser);
 roleField.addEventListener("change", setRoleMetaVisibility);
@@ -542,8 +642,29 @@ editUserModalOverlay.addEventListener("click", (event) => {
   }
 });
 
+filterAllBtn.addEventListener("click", () => {
+  selectedUserTypeFilter = "all";
+  updateFilterButtons();
+  applyUserFilters();
+});
+
+filterStudentBtn.addEventListener("click", () => {
+  selectedUserTypeFilter = "student";
+  updateFilterButtons();
+  applyUserFilters();
+});
+
+filterFacultyBtn.addEventListener("click", () => {
+  selectedUserTypeFilter = "faculty";
+  updateFilterButtons();
+  applyUserFilters();
+});
+
+userSearchInput.addEventListener("input", applyUserFilters);
+
 (async function init() {
   setRoleMetaVisibility();
+  updateFilterButtons();
   try {
     await loadDepartmentsBranches();
     await loadBranchBatches();

@@ -90,7 +90,7 @@ async function loadStudentResults() {
     semesterCountValue.textContent = Array.isArray(data.semesters) ? data.semesters.length : 0;
 
     const student = data.student || {};
-    resultsMeta.textContent = `Result summary for ${student.branch_id || "-"} (${student.branch || "-"}).`;
+    resultsMeta.textContent = ``;
 
     renderSemesters(data.semesters || []);
   } catch (error) {
